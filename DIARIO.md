@@ -18,13 +18,15 @@ Fonte bruta para o portfólio. O índice curado está em [docs/guia-portfolio.md
 
 Repositório local desde o início da documentação. `.gitignore` cobre Maven, Java e IDE.
 
-Commit só com o teste da etapa verde:
+Commit só com o teste da etapa verde. **Mensagens em inglês** (assunto curto, corpo opcional em 1–2 frases):
 
 ```bash
 git add -A
-git commit -m "etapa N: <efeito verde>"
+git commit -m "stage N: <green outcome>"
 git tag etapa-N
 ```
+
+Exemplos: `stage 1: Spring Boot skeleton and green ContextoTest`, `docs: development diary and portfolio guide`.
 
 Publicação posterior, ao fechar a etapa 4:
 
