@@ -47,17 +47,17 @@ Conferir no GitHub o `README.md` mínimo, este `DIARIO.md` e `docs/`. O link ent
 
 ## Etapa 1 — Esqueleto
 
-Estado: não executada. Em 20 de outubro de 2026 o diretório `/home/dxnzel/dev/menu-carga` estava vazio. Não há `pom.xml`, teste de contexto, nem `README.md`. Esta seção não reconstrói um esqueleto que não rodou.
+Estado: fechada com teste verde. `mvn test` terminou em **BUILD SUCCESS**; `menucarga.ContextoTest#sobe` passou.
 
 - Tempo estimado: 60–90 minutos.
-- Tempo real: —
-- Erro ou dificuldade: —
-- Tentativa que falhou: —
-- Tradeoff e decisão: —
-- Solução: —
-- CAR: —
+- Tempo real: não cronometrado; ambiente instalado e teste validado no mesmo dia (20 de outubro de 2026).
+- Erro ou dificuldade: antes do `apt`, `java` e `mvn` retornavam `zsh: command not found` no WSL.
+- Tentativa que falhou: nenhuma tentativa de instalação alternativa (SDKMAN, wrapper) nesta etapa; o bloqueio era só PATH vazio.
+- Tradeoff e decisão: (1) Spring Boot **3.5.16** no `pom.xml`, última linha 3.x em OSS, porque o laboratório pede Spring Boot 3 e não a 4. (2) **Java 17 e Maven pelo `apt`** (`sudo apt install openjdk-17-jdk maven`): instalação global no Ubuntu/WSL, simples para um único lab, em troca de ficar preso à versão empacotada pela distro (OpenJDK 17.0.20.1, Maven 3.9.12) em vez de gerenciar vários JDKs com SDKMAN.
+- Solução: `pom.xml`, `MenuCargaApplication`, `ContextoTest`, `src/test/resources/application.properties`, `README.md`; ambiente com `java -version` / `mvn -version` apontando para `/usr/lib/jvm/java-17-openjdk-amd64`.
+- CAR: A etapa 1 só exige que o contexto Spring suba com as dependências do laboratório, sem endpoint de negócio. O JUnit 5 com `@SpringBootTest` prova a subida; o controller e o HTTP entram nas etapas seguintes. Resultado: `mvn test` com BUILD SUCCESS; ainda não há rota HTTP nesta etapa.
 
-Critério de fechamento, ainda aberto: projeto Maven `menu-carga`, Java 17, Spring Boot 3, Web, Validation, Data JPA, H2 e test, pacote `menucarga`, um teste que sobe o contexto, README listando o que ficou de fora.
+Critério de fechamento: atendido.
 
 Detalhe: [docs/etapas/etapa-01-esqueleto.md](docs/etapas/etapa-01-esqueleto.md).
 

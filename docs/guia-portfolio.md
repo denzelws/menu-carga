@@ -82,7 +82,7 @@ Os testes ainda não existem. O mapa abaixo é o alvo. Cada teste passa pela API
 | 2 | Arquivo ausente, vazio ou cabeçalho errado devolve 400 `{ "error": "arquivo rejeitado" }` e a tabela fica vazia | a nomear | 3 |
 | 3 | `POST /concessoes` e depois `GET /modulos/cardapio?pessoa=Ana` devolve permitido true; sem concessão, false | a nomear | 2 |
 | 4 | `GET /modulos/cardapio` devolve 200 e `GET /modules/menu` devolve 404 | a nomear | 4 |
-| Contexto | O contexto Spring sobe | a nomear | 1 |
+| Contexto | O contexto Spring sobe | `menucarga.ContextoTest` | 1 |
 
 Fixture do critério 1:
 
