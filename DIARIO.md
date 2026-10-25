@@ -65,13 +65,41 @@ Detalhe: [docs/etapas/etapa-01-esqueleto.md](docs/etapas/etapa-01-esqueleto.md).
 
 ## Etapa 2 — Concessão
 
-Estado: não iniciada. Fecha com o critério 3.
+Estado: fechada com teste verde. `mvn test` passou, incluindo `ConcessaoApiTest`.
+
+- Tempo estimado: 60–90 minutos.
+- Tempo real: não cronometrado; escrita e validação no mesmo dia (20 de outubro de 2026).
+- Erro ou dificuldade: o teste nasceu antes da rota. A primeira execução devolveu 404 (`No static resource concessoes` e `No static resource modulos/cardapio`).
+- Tentativa que falhou: nenhuma implementação anterior. O vermelho era a ausência do endpoint.
+- Tradeoff e decisão: `@Valid` no corpo do POST, com `@NotBlank` e `@Pattern` no record `NovaConcessao`. Path e direito fora do contrato viram 400 antes do service. `ativa` não entra no JSON; o service grava `true`.
+- Solução: `Concessao`, `ConcessaoRepository`, `ConcessaoService`, `ConcessaoController`.
+- CAR: A concessão só vale com os quatro campos preenchidos, path `/modulos/menu` e direito `ACESSO`, e nasce ativa. O controller recebe HTTP e delega; o service grava e consulta; o repositório não conhece a rota. `POST /concessoes` válido responde 201, corpo inválido responde 400 sem gravar, e `GET /modulos/menu?pessoa=Ana` responde `{ "permitido": true }` ou `{ "permitido": false }`. O path `/modulos/cardapio` foi trocado por `/modulos/menu` para o nome da rota acompanhar o módulo. `GET /modules/menu` continua sem mapeamento.
+
+### Limpeza da entidade
+
+Em 22 de outubro de 2026, `Concessao` ainda era um bean com getter e setter para cada campo. O service montava a linha com `new Concessao()` e `setAtiva(true)`. Nenhum getter era chamado. A consulta do repositório lê os campos pelo metamodelo do Hibernate, porque as anotações JPA estão nos campos.
+
+Tradeoff: `ativar()` e `desativar()` foram descartados. A concessão nasce ativa, e esta semana não tem revogação. Um `desativar()` criaria um estado que nenhuma rota usa. A validação de path e direito permanece no DTO `NovaConcessao`; repetir essa regra na entidade misturaria HTTP com persistência.
+
+Decisão: construtor `Concessao(pessoa, modulo, path, direito)` grava `ativa = true`. O construtor vazio ficou `protected`, só para o JPA reidratar a linha. Getters e setters saíram. A busca no projeto mostrou um único ponto de montagem, o `ConcessaoService`. Testes passam pela API e não instanciam a entidade. Não há job. `mvn test` continuou verde.
 
 Detalhe: [docs/etapas/etapa-02-concessao.md](docs/etapas/etapa-02-concessao.md).
 
 ## Etapa 3 — Carga
 
-Estado: não iniciada. Fecha com os critérios 1 e 2.
+Estado: fechada com teste verde. `mvn test` passou, incluindo `CargaApiTest`.
+
+- Tempo estimado: 60–90 minutos.
+- Tempo real: não cronometrado; escrita e validação em 25 de outubro de 2026.
+- Erro ou dificuldade: o teste nasceu antes da rota. A primeira execução devolveu 404 (`No static resource cargas`).
+- Tentativa que falhou: nenhuma implementação anterior. O vermelho era a ausência de `POST /cargas`.
+- Tradeoff e decisão: a fronteira fica no tipo da falha. Arquivo ausente, vazio ou com cabeçalho diferente responde 400 e nada persiste. Campo em branco, path diferente de `/modulos/menu` ou direito diferente de `ACESSO` responde 200, grava as outras linhas e devolve o erro da linha. O `Validator` roda na mão sobre `NovaConcessao`; as mensagens do lote (`campo obrigatorio`, `path invalido`, `direito invalido`) são traduzidas no `ValidadorDeLinha`, porque o Bean Validation não usa esses textos. Quem valida não grava. A gravação das válidas acontece depois, na mesma transação do `CargaService`.
+- Solução: `LeitorDeLinhas`, `LeitorCsv`, `ValidadorDeLinha`, `CargaService`, `CargaController`. A parte multipart se chama `arquivo`.
+- CAR: O arquivo lido responde 200 mesmo com linha inválida; arquivo ausente, vazio ou com cabeçalho errado responde 400 e não grava. O controller só recebe o multipart; o `LeitorCsv` lê as linhas atrás de `LeitorDeLinhas`; o `ValidadorDeLinha` decide a linha e o `ConcessaoService` grava só as aceitas. `POST /cargas` da Ana devolve `persisted: 1` e o erro da linha 3 com `campo obrigatorio`.
+
+Prova manual em 25 de outubro de 2026, ainda no H2. O `curl` com `-F "arquivo=@regras.csv"` respondeu 200, `persisted: 0`, linha 2 `path invalido` e linha 3 `direito invalido`. Nada foi gravado.
+
+O mesmo arquivo no Insomnia respondeu 400 `{ "error": "arquivo rejeitado" }`. O Body estava em File, então o CSV ia no corpo cru, sem o campo `arquivo`. O controller trata parte ausente como arquivo rejeitado e nem lê as linhas. O acerto é Multipart Form, campo com o nome `arquivo` e tipo File. O curl já montava essa parte; por isso os dois clientes divergiam com o arquivo certo.
 
 Detalhe: [docs/etapas/etapa-03-carga.md](docs/etapas/etapa-03-carga.md).
 
@@ -80,3 +108,15 @@ Detalhe: [docs/etapas/etapa-03-carga.md](docs/etapas/etapa-03-carga.md).
 Estado: não iniciada. Acrescenta o critério 4. Não mapeia `/modules/menu`.
 
 Detalhe: [docs/etapas/etapa-04-trava.md](docs/etapas/etapa-04-trava.md).
+
+## Evolução futura — PostgreSQL
+
+Estado: anotada em 25 de outubro de 2026. Não implementada.
+
+O `mvn spring-boot:run` grava no H2 em memória. A concessão manual no Insomnia passou: o `POST` 201 e o `GET` da Ana leu a linha. Ao encerrar o processo, a tabela some. A carga manual também passou no H2, pelo `curl`.
+
+Decisão de momento: a carga manual já fechou no H2. A etapa 4 também fica no H2. Ela só separa `GET /modulos/menu` sem `pessoa` (200) de `GET /modules/menu` (404) e não depende de outro banco. O PostgreSQL entra depois da etapa 4.
+
+Tradeoff: trocar o banco antes da carga manual mistura falha de CSV com falha de conexão, dialeto ou tabela. Trocar no meio da etapa 4 mistura rota com persistência. No `mvn test`, o H2 com `create-drop` permanece, para a suíte não exigir um servidor ligado. Na execução, o H2 sai e entram driver, URL, usuário e senha. Entidade, repositório e HTTP ficam. O sinal de que a troca funcionou é desligar a aplicação, subir de novo e o `GET` da Ana continuar `true`.
+
+SQL Server ficou de fora deste módulo. O banco desta evolução é o PostgreSQL.

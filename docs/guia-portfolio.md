@@ -15,7 +15,7 @@ Quando o remoto existir, substitua `<usuario>` e use esse link na página do por
 
 ## O que o laboratório é
 
-Um módulo, H2, teste local. A planilha grava concessão de menu: pessoa, módulo, path, direito. A consulta lê essa tabela. O path travado é `/modulos/cardapio`.
+Um módulo, H2, teste local. A planilha grava concessão de menu: pessoa, módulo, path, direito. A consulta lê essa tabela. O path travado é `/modulos/menu`.
 
 Ordem de construção: esqueleto, concessão, carga, trava do path. Ordem de contagem: carga, consulta, path.
 
@@ -53,15 +53,15 @@ flowchart LR
 
 ## Contrato HTTP
 
-Tabela `concessao`: `id`, `pessoa`, `modulo`, `path`, `direito`, `ativa`. Path aceito: `/modulos/cardapio`. Direito aceito: `ACESSO`. Toda linha persistida nasce com `ativa = true`.
+Tabela `concessao`: `id`, `pessoa`, `modulo`, `path`, `direito`, `ativa`. Path aceito: `/modulos/menu`. Direito aceito: `ACESSO`. Toda linha persistida nasce com `ativa = true`.
 
 | Rota | Resultado |
 | --- | --- |
 | `POST /concessoes` com pessoa, módulo, path e direito válidos | 201 e concessão ativa |
 | `POST /concessoes` com corpo inválido | 400 e nada persiste |
-| `GET /modulos/cardapio?pessoa={pessoa}` com concessão ativa | 200 `{ "permitido": true }` |
-| `GET /modulos/cardapio?pessoa={pessoa}` sem concessão | 200 `{ "permitido": false }` |
-| `GET /modulos/cardapio` | 200 |
+| `GET /modulos/menu?pessoa={pessoa}` com concessão ativa | 200 `{ "permitido": true }` |
+| `GET /modulos/menu?pessoa={pessoa}` sem concessão | 200 `{ "permitido": false }` |
+| `GET /modulos/menu` | 200 |
 | `GET /modules/menu` | 404, rota não criada |
 | `POST /cargas` com arquivo ausente, vazio ou cabeçalho diferente | 400 `{ "error": "arquivo rejeitado" }` e tabela vazia |
 | `POST /cargas` com CSV lido | 200 sempre, mesmo com linha inválida ou `persisted: 0` |
@@ -74,22 +74,22 @@ A linha inválida não derruba o lote. O arquivo inteiro é validado. Persistem 
 
 ## Critério para teste
 
-Os testes ainda não existem. O mapa abaixo é o alvo. Cada teste passa pela API. Sem seed SQL. O nome do teste será preenchido quando a classe nascer.
+Cada teste passa pela API. Sem seed SQL. O nome entra na tabela quando a classe nasce.
 
 | Critério | O que prova | Teste | Etapa |
 | --- | --- | --- | --- |
-| 1 | CSV da Ana grava uma linha e devolve `campo obrigatorio` na linha 3, status 200 | a nomear | 3 |
-| 2 | Arquivo ausente, vazio ou cabeçalho errado devolve 400 `{ "error": "arquivo rejeitado" }` e a tabela fica vazia | a nomear | 3 |
-| 3 | `POST /concessoes` e depois `GET /modulos/cardapio?pessoa=Ana` devolve permitido true; sem concessão, false | a nomear | 2 |
-| 4 | `GET /modulos/cardapio` devolve 200 e `GET /modules/menu` devolve 404 | a nomear | 4 |
+| 1 | CSV da Ana grava uma linha e devolve `campo obrigatorio` na linha 3, status 200 | `menucarga.CargaApiTest` | 3 |
+| 2 | Arquivo ausente, vazio ou cabeçalho errado devolve 400 `{ "error": "arquivo rejeitado" }` e a tabela fica vazia | `menucarga.CargaApiTest` | 3 |
+| 3 | `POST /concessoes` e depois `GET /modulos/menu?pessoa=Ana` devolve permitido true; sem concessão, false | `menucarga.ConcessaoApiTest` | 2 |
+| 4 | `GET /modulos/menu` devolve 200 e `GET /modules/menu` devolve 404 | a nomear | 4 |
 | Contexto | O contexto Spring sobe | `menucarga.ContextoTest` | 1 |
 
 Fixture do critério 1:
 
 ```csv
 pessoa,modulo,path,direito
-Ana,Cardapio,/modulos/cardapio,ACESSO
-,Cardapio,/modulos/cardapio,ACESSO
+Ana,Cardapio,/modulos/menu,ACESSO
+,Cardapio,/modulos/menu,ACESSO
 ```
 
 ## Evidências

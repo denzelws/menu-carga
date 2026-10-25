@@ -4,7 +4,7 @@ Estado: não iniciada. Só começa com a etapa 3 verde e commitada.
 
 ## Contexto e tempo
 
-Acrescenta o critério 4. Não mapeia `/modules/menu`. O path travado da consulta é `/modulos/cardapio`.
+Acrescenta o critério 4. Não mapeia `/modules/menu`. O path travado da consulta é `/modulos/menu`.
 
 - Início: —
 - Fim: —
@@ -40,5 +40,5 @@ O critério 4 não sai da semana.
 
 Ainda aberto.
 
-- `GET /modulos/cardapio` responde 200.
+- `GET /modulos/menu` responde 200.
 - `GET /modules/menu` responde 404 porque essa rota não é criada.
