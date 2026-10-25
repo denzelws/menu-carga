@@ -105,7 +105,15 @@ Detalhe: [docs/etapas/etapa-03-carga.md](docs/etapas/etapa-03-carga.md).
 
 ## Etapa 4 — Trava
 
-Estado: não iniciada. Acrescenta o critério 4. Não mapeia `/modules/menu`.
+Estado: fechada com teste verde. `mvn test` passou, incluindo `ConcessaoApiTest`.
+
+- Tempo estimado: 60–90 minutos.
+- Tempo real: não cronometrado; escrita e validação em 25 de outubro de 2026.
+- Erro ou dificuldade: o teste nasceu antes de soltar o parâmetro. `GET /modulos/menu` sem `pessoa` respondeu 400 (`Required parameter 'pessoa' is not present`).
+- Tentativa que falhou: nenhuma rota nova. O vermelho era o `@RequestParam` obrigatório.
+- Tradeoff e decisão: `pessoa` fica opcional. Sem pessoa, ou com valor em branco, a rota responde 200 e não consulta o banco, para não devolver `permitido: false` de alguém que não foi pedido. Com pessoa, o corpo continua `{ "permitido": true|false }`. `/modules/menu` não ganha mapeamento.
+- Solução: `ConcessaoController.consultar` e o teste `menuSemPessoaRespondeOkEInglesNaoExiste`.
+- CAR: O path travado da consulta é `/modulos/menu`; `/modules/menu` não é rota. O controller aceita o GET sem pessoa e só chama o service quando a pessoa vem preenchida. `GET /modulos/menu` responde 200 e `GET /modules/menu` responde 404.
 
 Detalhe: [docs/etapas/etapa-04-trava.md](docs/etapas/etapa-04-trava.md).
 
@@ -115,7 +123,7 @@ Estado: anotada em 25 de outubro de 2026. Não implementada.
 
 O `mvn spring-boot:run` grava no H2 em memória. A concessão manual no Insomnia passou: o `POST` 201 e o `GET` da Ana leu a linha. Ao encerrar o processo, a tabela some. A carga manual também passou no H2, pelo `curl`.
 
-Decisão de momento: a carga manual já fechou no H2. A etapa 4 também fica no H2. Ela só separa `GET /modulos/menu` sem `pessoa` (200) de `GET /modules/menu` (404) e não depende de outro banco. O PostgreSQL entra depois da etapa 4.
+Decisão de momento: a carga manual e a etapa 4 fecharam no H2. O PostgreSQL continua fora do código e entra na execução, com o `mvn test` no H2.
 
 Tradeoff: trocar o banco antes da carga manual mistura falha de CSV com falha de conexão, dialeto ou tabela. Trocar no meio da etapa 4 mistura rota com persistência. No `mvn test`, o H2 com `create-drop` permanece, para a suíte não exigir um servidor ligado. Na execução, o H2 sai e entram driver, URL, usuário e senha. Entidade, repositório e HTTP ficam. O sinal de que a troca funcionou é desligar a aplicação, subir de novo e o `GET` da Ana continuar `true`.
 

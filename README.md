@@ -2,7 +2,7 @@
 
 API em Java 17 e Spring Boot 3 que grava e consulta permissão de acesso a um módulo. Carga em lote por CSV. Consulta por pessoa. H2 nos testes.
 
-**Estado:** etapa 3. Carga CSV no ar (`CargaApiTest`). A trava de `/modules/menu` ainda não está coberta por teste.
+**Estado:** etapa 4. `GET /modulos/menu` responde 200 e `GET /modules/menu` responde 404 (`ConcessaoApiTest`).
 
 ## Objetivo
 

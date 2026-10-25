@@ -43,6 +43,15 @@ class ConcessaoApiTest {
   }
 
   @Test
+  void menuSemPessoaRespondeOkEInglesNaoExiste() throws Exception {
+    mockMvc.perform(get("/modulos/menu"))
+      .andExpect(status().isOk());
+
+    mockMvc.perform(get("/modules/menu"))
+      .andExpect(status().isNotFound());
+  }
+
+  @Test
   void corpoInvalidoNaoPersiste() throws Exception {
     mockMvc.perform(post("/concessoes")
       .contentType(MediaType.APPLICATION_JSON)

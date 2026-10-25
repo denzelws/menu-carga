@@ -5,6 +5,7 @@ import menucarga.api.NovaConcessao;
 import menucarga.api.PermissaoResponse;
 import menucarga.concessao.ConcessaoService;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -31,7 +32,12 @@ public class ConcessaoController {
   }
 
   @GetMapping("/modulos/menu")
-  public PermissaoResponse consultar(@RequestParam String pessoa) {
-    return new PermissaoResponse(service.permitido(pessoa));
+  public ResponseEntity<PermissaoResponse> consultar(
+    @RequestParam(required = false) String pessoa
+  ) {
+    if (pessoa == null || pessoa.isBlank()) {
+      return ResponseEntity.ok().build();
+    }
+    return ResponseEntity.ok(new PermissaoResponse(service.permitido(pessoa)));
   }
 }

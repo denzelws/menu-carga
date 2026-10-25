@@ -81,7 +81,7 @@ Cada teste passa pela API. Sem seed SQL. O nome entra na tabela quando a classe 
 | 1 | CSV da Ana grava uma linha e devolve `campo obrigatorio` na linha 3, status 200 | `menucarga.CargaApiTest` | 3 |
 | 2 | Arquivo ausente, vazio ou cabeçalho errado devolve 400 `{ "error": "arquivo rejeitado" }` e a tabela fica vazia | `menucarga.CargaApiTest` | 3 |
 | 3 | `POST /concessoes` e depois `GET /modulos/menu?pessoa=Ana` devolve permitido true; sem concessão, false | `menucarga.ConcessaoApiTest` | 2 |
-| 4 | `GET /modulos/menu` devolve 200 e `GET /modules/menu` devolve 404 | a nomear | 4 |
+| 4 | `GET /modulos/menu` devolve 200 e `GET /modules/menu` devolve 404 | `menucarga.ConcessaoApiTest` | 4 |
 | Contexto | O contexto Spring sobe | `menucarga.ContextoTest` | 1 |
 
 Fixture do critério 1:
