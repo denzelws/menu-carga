@@ -52,6 +52,28 @@ class ConcessaoApiTest {
   }
 
   @Test
+  void concessaoRepetidaRespondeConflito() throws Exception {
+    String corpo = """
+      {"pessoa":"Ana","modulo":"Cardapio","path":"/modulos/menu","direito":"ACESSO"}
+      """;
+
+    mockMvc.perform(post("/concessoes")
+      .contentType(MediaType.APPLICATION_JSON)
+      .content(corpo))
+      .andExpect(status().isCreated());
+
+    mockMvc.perform(post("/concessoes")
+      .contentType(MediaType.APPLICATION_JSON)
+      .content(corpo))
+      .andExpect(status().isConflict())
+      .andExpect(jsonPath("$.error").value("concessao duplicada"));
+
+    mockMvc.perform(get("/modulos/menu").param("pessoa", "Ana"))
+      .andExpect(status().isOk())
+      .andExpect(jsonPath("$.permitido").value(true));
+  }
+
+  @Test
   void corpoInvalidoNaoPersiste() throws Exception {
     mockMvc.perform(post("/concessoes")
       .contentType(MediaType.APPLICATION_JSON)

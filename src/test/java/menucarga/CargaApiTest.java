@@ -84,6 +84,36 @@ class CargaApiTest {
       .andExpect(jsonPath("$.errors[1].message").value("direito invalido"));
   }
 
+  @Test
+  void linhaDuplicadaNaoGravaDeNovo() throws Exception {
+    String repetida = """
+      pessoa,modulo,path,direito
+      Ana,Cardapio,/modulos/menu,ACESSO
+      Ana,Cardapio,/modulos/menu,ACESSO
+      """;
+
+    mockMvc.perform(multipart("/cargas").file(csv("repetida.csv", repetida)))
+      .andExpect(status().isOk())
+      .andExpect(jsonPath("$.persisted").value(1))
+      .andExpect(jsonPath("$.errors[0].line").value(3))
+      .andExpect(jsonPath("$.errors[0].message").value("concessao duplicada"));
+
+    String contraBanco = """
+      pessoa,modulo,path,direito
+      Ana,Cardapio,/modulos/menu,ACESSO
+      """;
+
+    mockMvc.perform(multipart("/cargas").file(csv("banco.csv", contraBanco)))
+      .andExpect(status().isOk())
+      .andExpect(jsonPath("$.persisted").value(0))
+      .andExpect(jsonPath("$.errors[0].line").value(2))
+      .andExpect(jsonPath("$.errors[0].message").value("concessao duplicada"));
+
+    mockMvc.perform(get("/modulos/menu").param("pessoa", "Ana"))
+      .andExpect(status().isOk())
+      .andExpect(jsonPath("$.permitido").value(true));
+  }
+
   private MockMultipartFile csv(String nome, String conteudo) {
     return new MockMultipartFile("arquivo", nome, "text/csv", conteudo.getBytes());
   }

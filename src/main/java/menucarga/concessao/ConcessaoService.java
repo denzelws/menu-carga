@@ -14,6 +14,9 @@ public class ConcessaoService {
   }
 
   public void conceder(String pessoa, String modulo, String path, String direito) {
+    if (repository.existsByPessoaAndPathAndAtivaTrue(pessoa, path)) {
+      throw new ConcessaoDuplicadaException();
+    }
     repository.save(new Concessao(pessoa, modulo, path, direito));
   }
 

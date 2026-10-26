@@ -1,11 +1,14 @@
 package menucarga.api.controller;
 
 import jakarta.validation.Valid;
+import menucarga.api.ErroArquivo;
 import menucarga.api.NovaConcessao;
 import menucarga.api.PermissaoResponse;
+import menucarga.concessao.ConcessaoDuplicadaException;
 import menucarga.concessao.ConcessaoService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -29,6 +32,11 @@ public class ConcessaoController {
       pedido.pessoa(), pedido.modulo(),
       pedido.path(), pedido.direito()
     );
+  }
+
+  @ExceptionHandler(ConcessaoDuplicadaException.class)
+  public ResponseEntity<ErroArquivo> duplicada(ConcessaoDuplicadaException ex) {
+    return ResponseEntity.status(HttpStatus.CONFLICT).body(new ErroArquivo(ex.getMessage()));
   }
 
   @GetMapping("/modulos/menu")

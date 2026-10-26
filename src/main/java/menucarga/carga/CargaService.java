@@ -2,7 +2,9 @@ package menucarga.carga;
 
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import menucarga.api.ErroDeLinha;
 import menucarga.api.NovaConcessao;
 import menucarga.api.ResultadoCarga;
@@ -14,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class CargaService {
 
   static final String CABECALHO = "pessoa,modulo,path,direito";
+  static final String DUPLICADA = "concessao duplicada";
 
   private final LeitorDeLinhas leitor;
   private final ValidadorDeLinha validador;
@@ -38,13 +41,21 @@ public class CargaService {
 
     List<NovaConcessao> validas = new ArrayList<>();
     List<ErroDeLinha> erros = new ArrayList<>();
+    Set<String> chavesAceitas = new HashSet<>();
     for (int i = 1; i < linhas.size(); i++) {
       AvaliacaoDeLinha avaliacao = validador.avaliar(linhas.get(i));
-      if (avaliacao.aceita()) {
-        validas.add(avaliacao.concessao());
-      } else {
+      if (!avaliacao.aceita()) {
         erros.add(new ErroDeLinha(i + 1, avaliacao.mensagem()));
+        continue;
       }
+      NovaConcessao pedido = avaliacao.concessao();
+      String chave = pedido.pessoa() + "|" + pedido.path();
+      if (chavesAceitas.contains(chave) || concessoes.permitido(pedido.pessoa())) {
+        erros.add(new ErroDeLinha(i + 1, DUPLICADA));
+        continue;
+      }
+      chavesAceitas.add(chave);
+      validas.add(pedido);
     }
 
     for (NovaConcessao pedido : validas) {

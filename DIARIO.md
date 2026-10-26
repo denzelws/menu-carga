@@ -117,6 +117,17 @@ Estado: fechada com teste verde. `mvn test` passou, incluindo `ConcessaoApiTest`
 
 Detalhe: [docs/etapas/etapa-04-trava.md](docs/etapas/etapa-04-trava.md).
 
+## Evolução A — trava de duplicidade
+
+Estado: fechada com teste verde em 25 de outubro de 2026. `mvn test` passou: 11 testes, 0 falhas.
+
+- Erro ou dificuldade: os dois testes nasceram vermelhos. O segundo `POST /concessoes` da Ana respondeu 201 em vez de 409. A carga com a Ana duas vezes gravou `persisted: 2` em vez de 1.
+- Tradeoff e decisão: a checagem acontece antes do `save`, reusando `existsByPessoaAndPathAndAtivaTrue`. Uma violação de constraint no meio do `POST /cargas` marcaria a transação para rollback e derrubaria o lote, contra a regra de que linha inválida não derruba as outras. Por isso a carga também rejeita a linha duplicada antes de gravar, contra o banco e contra as linhas já aceitas do mesmo arquivo. O `409` usa o mesmo `ErroArquivo` do 400, porque o corpo `{ "error": ... }` já é o contrato de erro da API. O índice único em `(pessoa, path)` é a segunda trava, no banco. Índice simples, não parcial: toda linha nasce ativa e ainda não existe revogação.
+- Solução: `ConcessaoDuplicadaException`, guarda em `ConcessaoService.conceder`, `@ExceptionHandler` com 409 no `ConcessaoController`, guarda de duplicidade no `CargaService`, `uniqueConstraints` na `Concessao`.
+- CAR: Uma pessoa não ganha duas concessões ativas para o mesmo path. O service recusa antes de gravar; o controller traduz em 409; a carga devolve a linha em `errors` e grava as outras. `POST /concessoes` repetido responde 409 `{ "error": "concessao duplicada" }`; a carga com a Ana duas vezes responde 200, `persisted: 1`, linha 3 `concessao duplicada`.
+
+Detalhe: [docs/etapas/etapa-05-duplicada.md](docs/etapas/etapa-05-duplicada.md).
+
 ## Evolução futura — PostgreSQL
 
 Estado: anotada em 25 de outubro de 2026. Não implementada.
