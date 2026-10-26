@@ -126,16 +126,43 @@ Estado: fechada com teste verde em 25 de outubro de 2026. `mvn test` passou: 11 
 - Solução: `ConcessaoDuplicadaException`, guarda em `ConcessaoService.conceder`, `@ExceptionHandler` com 409 no `ConcessaoController`, guarda de duplicidade no `CargaService`, `uniqueConstraints` na `Concessao`.
 - CAR: Uma pessoa não ganha duas concessões ativas para o mesmo path. O service recusa antes de gravar; o controller traduz em 409; a carga devolve a linha em `errors` e grava as outras. `POST /concessoes` repetido responde 409 `{ "error": "concessao duplicada" }`; a carga com a Ana duas vezes responde 200, `persisted: 1`, linha 3 `concessao duplicada`.
 
+Prova manual em 25 de outubro de 2026, ainda no H2. O segundo `POST /concessoes` da Ana respondeu 409 e o GET continuou `permitido: true`. O mesmo CSV com a Ana duas vezes, enviado depois desse POST, respondeu 200 com `persisted: 0` e as linhas 2 e 3 em `concessao duplicada`: as duas bateram na linha que já estava no banco. Com o processo reiniciado e a tabela vazia, o mesmo arquivo respondeu `persisted: 1` e só a linha 3 duplicada. O arquivo não vira 409. A duplicidade é erro de linha, no mesmo 200 das outras linhas recusadas.
+
 Detalhe: [docs/etapas/etapa-05-duplicada.md](docs/etapas/etapa-05-duplicada.md).
 
-## Evolução futura — PostgreSQL
+## Evolução B — PostgreSQL
 
-Estado: anotada em 25 de outubro de 2026. Não implementada.
+Estado: B3 fechada em 26 de outubro de 2026. V1 e V2 aplicadas no Postgres. O `mvn test` segue no H2. A prova de restart da Ana fica para a B4.
 
-O `mvn spring-boot:run` grava no H2 em memória. A concessão manual no Insomnia passou: o `POST` 201 e o `GET` da Ana leu a linha. Ao encerrar o processo, a tabela some. A carga manual também passou no H2, pelo `curl`.
+Preparação do ambiente. O Docker Desktop ficou no motor WSL2. O socket `/var/run/docker.sock` é `root:docker`, modo `660`. O usuário da WSL já estava no grupo `docker` no `/etc/group`, mas a sessão tinha começado antes disso: `id -nG` não listava `docker` e o `docker compose` respondia `permission denied`. O `newgrp` não existe nesta WSL. O socket não foi aberto com `chmod 666`. Saída imediata: `sudo docker compose`. Saída duradoura: `wsl --shutdown` no PowerShell do Windows e abrir o Ubuntu de novo, para a sessão carregar o grupo.
 
-Decisão de momento: a carga manual e a etapa 4 fecharam no H2. O PostgreSQL continua fora do código e entra na execução, com o `mvn test` no H2.
+B1 fechada em 26 de outubro de 2026. `docker-compose.yml` sobe só o Postgres 16, banco `menu_carga`, volume `menu_carga_pg`. Credencial só local, no Compose. O `\dt` respondeu `Did not find any relations`.
 
-Tradeoff: trocar o banco antes da carga manual mistura falha de CSV com falha de conexão, dialeto ou tabela. Trocar no meio da etapa 4 mistura rota com persistência. No `mvn test`, o H2 com `create-drop` permanece, para a suíte não exigir um servidor ligado. Na execução, o H2 sai e entram driver, URL, usuário e senha. Entidade, repositório e HTTP ficam. O sinal de que a troca funcionou é desligar a aplicação, subir de novo e o `GET` da Ana continuar `true`.
+B2 em observação. O H2 foi para escopo `test`. A execução usa o driver PostgreSQL, `ddl-auto=update`, SQL formatado e o logger `org.hibernate.tool.schema` em DEBUG. Flyway ainda desligado. O `mvn test` continuou no H2 (`jdbc:h2:mem:menu-carga`) e passou. Na subida contra o Postgres vazio, o Hibernate emitiu `create table concessao` (`id` identity, `ativa boolean not null`, `direito`, `modulo`, `path` e `pessoa` como `varchar(255) not null`, chave primária em `id`) e depois `alter table ... add constraint ... unique (pessoa, path)`. O nome do índice foi gerado pelo Hibernate. Antes do `add`, o `drop constraint if exists` avisou que a constraint ainda não existia; o `update` tenta alinhar o que já está no banco. Esse schema é observação: o `varchar(255)` e o nome do índice não são o contrato final.
+
+Senha. Alternativas consideradas em 26 de outubro de 2026:
+
+- Senha só no arquivo, sem variável. A leitura fica óbvia e o mesmo arquivo levaria a credencial local para qualquer outro ambiente.
+- Variável de ambiente com valor local só quando a variável falta. Foi a escolha. Quem clona o repositório sobe o Compose nesta máquina. Em outro ambiente a plataforma injeta a variável e o valor do arquivo não entra. O `mvn test` não usa essa credencial: o `application.properties` de teste aponta para o H2.
+- Cofre real (Vault, Secrets Manager ou Key Vault). A senha sairia do Git. A API passaria a depender de outro segredo, o acesso ao cofre, e de um serviço que o tech lead não tem ao rodar o projeto local.
+- Cofre dentro do Compose, com token fixo. Subiria junto com o banco e o token voltaria ao repositório. O efeito é o contrário do cofre de produção.
+
+Decisão: sem cofre nesta evolução. O arquivo declara a variável. O valor local existe para o Compose desta máquina.
+
+B3, V1 aplicada em 26 de outubro de 2026. O Flyway entra na execução. O teste desliga o Flyway e segue no H2 com `create-drop`. `ddl-auto=validate`. A `V1__concessao.sql` cria `concessao` com chave, colunas e `ativa`, sem o único em `(pessoa, path)`. Na subida, o log registrou `Migrating schema "public" to version "1 - concessao"` e `Successfully applied 1 migration`. O Hibernate não emitiu `CREATE`.
+
+B3, V2 aplicada em 26 de outubro de 2026. `V2__concessao_pessoa_path_unica.sql` adiciona `concessao_pessoa_path_uk` em `(pessoa, path)`. A mesma restrição voltou na entidade, com esse nome, para o `validate` achar o índice. O log registrou `Migrating schema "public" to version "2 - concessao pessoa path unica"` e `now at version v2`. A `V1` não rodou de novo. O `mvn test` passou.
+
+Análises da B3, em 26 de outubro de 2026:
+
+- Duas migrações, com parada no meio. A V1 só cria a tabela. A V2 só cria o índice. O ponto era olhar o `\d concessao` entre as duas, em vez de receber o schema inteiro de uma vez.
+- O schema da B2 e a V1 não cabem no mesmo banco. O Flyway não inspeciona a tabela que já existe para pular uma versão. Ele só pula o que está em `flyway_schema_history` com sucesso. A V1 é `CREATE TABLE`. Com a `concessao` da B2 no volume, o Postgres responde `relation "concessao" already exists` e a versão 1 não fica marcada. Por isso o volume foi recriado uma vez, com `docker compose down -v`, antes da V1. Não foi por causa da anotação de único.
+- O que o `\d` da V1 mostra de diferente da B2 é a ordem das colunas: `pessoa`, `modulo`, `path`, `direito`, `ativa`, e só o índice `concessao_pkey`. O par `(pessoa, path)` não está nessa tabela. Esse par é a V2. A primeira leitura, de que a diferença visual já era o índice único, estava errada.
+- O Hibernate deixa de emitir DDL. Com `ddl-auto=validate` ele só compara a entidade com o schema e falha se os dois divergirem. `SELECT` e `INSERT` continuam dele. Quem muda tabela é o arquivo em `db/migration`.
+- A anotação `uniqueConstraints` saiu na V1 e voltou na V2. Com ela ligada e a tabela sem o índice, o `validate` recusa a subida. O nome `concessao_pessoa_path_uk` é explícito nos dois lados. Sem o nome, o Hibernate geraria outro, como o `UKrn451rv1fj6h7wwoh1e6qmtfw` da B2, e o `validate` não reconheceria o índice do SQL.
+- A checagem `existsByPessoaAndPathAndAtivaTrue` permanece. Ela existe para a API responder 409, e para a carga recusar a linha sem marcar a transação inteira para rollback. O índice não substitui essa checagem. Ele trava a corrida de dois processos gravando o mesmo par ao mesmo tempo.
+- O volume `menu_carga_pg` agora guarda a tabela e o histórico das versões 1 e 2. `docker compose down` sem `-v` preserva isso. Outro `down -v` apagaria as duas migrações já aplicadas.
+
+A carga manual e a etapa 4 fecharam no H2, antes desta evolução. O `mvn test` continua no H2, com o Flyway desligado, para a suíte não depender do Compose. O `mvn spring-boot:run` desta evolução grava no Postgres. A prova de que a Ana sobrevive a um restart fica na B4.
 
 SQL Server ficou de fora deste módulo. O banco desta evolução é o PostgreSQL.
