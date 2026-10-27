@@ -1,92 +1,240 @@
-# menu-carga
+# Menu Carga
 
-[![test](https://github.com/denzelws/menu-carga/actions/workflows/test.yml/badge.svg)](https://github.com/denzelws/menu-carga/actions/workflows/test.yml)
+[![Testes](https://github.com/denzelws/menu-carga/actions/workflows/test.yml/badge.svg)](https://github.com/denzelws/menu-carga/actions/workflows/test.yml)
 
-API em Java 17 e Spring Boot 3 que grava e consulta permissão de acesso a um módulo. Carga em lote por CSV. Consulta por pessoa.
+API REST desenvolvida com Java 17 e Spring Boot 3 para gerenciamento e consulta de concessões de acesso, com suporte à importação de registros em lote via CSV.
 
-A execução usa PostgreSQL 16. O Flyway aplica o schema. Os testes de API ficam no H2. O `mvn verify` sobe um Postgres 16 efêmero com Testcontainers. O GitHub Actions roda esse mesmo `mvn verify`.
+O projeto demonstra validação de dados, separação de responsabilidades, persistência relacional, integridade de dados e testes automatizados em diferentes ambientes.
 
-**Estado:** API no Compose, migrações V1 e V2 aplicadas, concessão duplicada recusada. O workflow `test` passou no GitHub.
+Diário de desenvolvimento: [DIARIO.md](DIARIO.md).
 
-## Objetivo
+## Funcionalidades
 
-Gravar uma concessão (`pessoa`, `modulo`, `path`, `direito`) e responder se aquela pessoa tem acesso ativo.
+- Cadastro de concessões de acesso.
+- Consulta de permissão por pessoa.
+- Importação de concessões em lote via CSV.
+- Validação dos registros antes da gravação.
+- Identificação de erros por linha durante a importação.
+- Prevenção de concessões duplicadas.
+- Persistência com PostgreSQL e migrações versionadas.
+- Testes automatizados e integração contínua.
 
-- Path aceito: `/modulos/menu`
-- Direito aceito: `ACESSO`
-- Toda concessão gravada nasce ativa
-- A mesma pessoa não ganha duas concessões para o mesmo path
+## Tecnologias
 
-Na carga CSV, o arquivo inteiro é validado. Só as linhas válidas são gravadas. Uma linha inválida, inclusive a duplicada, não derruba o lote.
+- **Linguagem:** Java 17
+- **Backend:** Spring Boot 3
+- **API:** REST
+- **Persistência:** Spring Data JPA e PostgreSQL 16
+- **Migrações:** Flyway
+- **Testes:** JUnit 5, Spring Boot Test, MockMvc e Testcontainers
+- **Banco para testes rápidos:** H2
+- **Infraestrutura:** Docker e Docker Compose
+- **CI:** GitHub Actions
+- **Build:** Maven
+
+## Como funciona
+
+O sistema gerencia concessões associadas a uma pessoa, um módulo, um caminho de acesso e um direito.
+
+Cada concessão criada nasce ativa. A API permite consultar se uma pessoa possui acesso autorizado ao caminho solicitado.
+
+A importação CSV valida os registros antes de persistir os dados. Linhas inválidas são identificadas individualmente, permitindo que os registros válidos sejam processados sem descartar todo o lote por causa de um erro em uma linha.
+
+### Regras de negócio
+
+- O caminho aceito é `/modulos/menu`.
+- O direito aceito é `ACESSO`.
+- Toda concessão criada nasce ativa.
+- A mesma pessoa não pode receber duas concessões para o mesmo caminho.
+- Uma concessão duplicada enviada individualmente resulta em `409 Conflict`.
+- Na importação CSV, linhas inválidas são reportadas sem interromper o processamento das demais linhas válidas.
+- Arquivos ausentes, vazios ou com cabeçalho inválido são rejeitados.
 
 ## Arquitetura
 
-`menucarga` sobe a aplicação. `menucarga.api.controller` recebe HTTP. `menucarga.api` guarda o JSON. `menucarga.carga` lê e valida o CSV. `menucarga.concessao` grava e consulta. O controller não lê arquivo nem decide linha. O service não conhece o JSON. O CSV fica atrás de `LeitorDeLinhas`. Quem valida não grava. O repositório não conhece HTTP.
-
-O Flyway é o dono do schema: `V1__concessao.sql` cria a tabela e `V2__concessao_pessoa_path_unica.sql` cria o índice `concessao_pessoa_path_uk` em `(pessoa, path)`. O Hibernate, com `ddl-auto=validate`, compara a entidade com esse schema e executa `SELECT` e `INSERT`. A checagem de duplicidade acontece antes do `save`, para a carga devolver o erro da linha sem marcar o lote inteiro para rollback. O índice é a trava no banco.
+A aplicação utiliza uma arquitetura em camadas, com responsabilidades separadas para o recebimento de requisições HTTP, validação, processamento da importação e persistência.
 
 ```mermaid
-flowchart LR
-  client[Cliente HTTP]
-  ctrl[Controller]
-  svc[Service]
-  leitor[LeitorDeLinhas]
-  repo[Repositorio JPA]
-  db[(Postgres concessao)]
+flowchart TD
+Client[Cliente HTTP]
+Controller[Controller]
+Service[Service]
+Reader[Leitor e validador CSV]
+Repository[Repositório JPA]
+Database[(PostgreSQL)]
 
-  client --> ctrl
-  ctrl --> svc
-  svc --> leitor
-  svc --> repo
-  repo --> db
+Client --> Controller
+Controller --> Service
+Service --> Reader
+Service --> Repository
+Repository --> Database
 ```
 
-## Contrato
+### Decisões técnicas
 
-1. `POST /cargas` com a parte `arquivo`, Ana válida e a linha seguinte sem `pessoa`: **200**, grava só Ana, erro na linha 3 com `campo obrigatorio`.
-2. Arquivo ausente, vazio ou com cabeçalho diferente: **400** `{ "error": "arquivo rejeitado" }`. Nada persiste.
-3. `POST /concessoes` e depois `GET /modulos/menu?pessoa=Ana`: `{ "permitido": true }`. Sem concessão: `{ "permitido": false }`.
-4. `GET /modulos/menu`: **200**. `GET /modules/menu`: **404**.
-5. Segundo `POST /concessoes` da mesma pessoa e do mesmo path: **409** `{ "error": "concessao duplicada" }`. Na carga, a linha repetida responde **200**, não grava de novo e devolve `concessao duplicada`.
+- **Separação de responsabilidades:** o controller trata as requisições HTTP, enquanto as regras de negócio ficam no serviço.
+- **Validação independente da persistência:** a leitura e a validação do CSV são separadas da gravação dos registros.
+- **Flyway:** as alterações no schema são controladas por migrações versionadas.
+- **Hibernate:** `ddl-auto=validate` verifica a compatibilidade entre as entidades e o schema existente, sem criar as tabelas automaticamente.
+- **Integridade dos dados:** a duplicidade é verificada na aplicação e protegida por um índice único no PostgreSQL.
+- **Testes de integração:** o Testcontainers permite executar testes com uma instância isolada do PostgreSQL.
 
-```bash
-curl -sS -D - -X POST http://localhost:8080/concessoes \
-  -H 'Content-Type: application/json' \
-  -d '{"pessoa":"Ana","modulo":"Cardapio","path":"/modulos/menu","direito":"ACESSO"}'
-```
+## Contrato da API
 
-A primeira resposta é **201**, com corpo vazio. A mesma chamada de novo responde **409**:
+### Criar uma concessão
+
+`POST /concessoes`
+
+Exemplo de requisição:
 
 ```json
-{"error":"concessao duplicada"}
+{
+"pessoa": "Ana",
+"modulo": "Cardapio",
+"path": "/modulos/menu",
+"direito": "ACESSO"
+}
 ```
 
-```bash
-curl -sS 'http://localhost:8080/modulos/menu?pessoa=Ana'
-```
+Resposta esperada na primeira criação:
+
+`201 Created`
+
+Uma nova tentativa de criar a mesma concessão resulta em:
+
+`409 Conflict`
 
 ```json
-{"permitido":true}
+{
+"error": "concessao duplicada"
+}
 ```
 
-Os testes passam pela API. Sem seed SQL. `CargaPostgresIT` repete a carga da Ana num Postgres 16, confere as versões 1 e 2 em `flyway_schema_history` e o índice `concessao_pessoa_path_uk`.
+### Consultar permissão
 
-## Executar
+`GET /modulos/menu?pessoa=Ana`
+
+Quando existe uma concessão ativa:
+
+```json
+{
+"permitido": true
+}
+```
+
+Quando não existe uma concessão ativa:
+
+```json
+{
+"permitido": false
+}
+```
+
+Sem `pessoa`, `GET /modulos/menu` responde `200 OK` com corpo vazio. `GET /modules/menu` não existe e responde `404`.
+
+### Importar concessões via CSV
+
+`POST /cargas`
+
+A requisição recebe o arquivo na parte multipart `arquivo`.
+
+O processamento valida o conteúdo e registra os resultados de cada linha. Um arquivo rejeitado retorna `400 Bad Request`; uma importação processada com erros em linhas individuais pode retornar `200 OK`, conforme o contrato implementado.
+
+Exemplo com a Ana válida na linha 2 e a linha 3 sem `pessoa`:
+
+```json
+{
+"persisted": 1,
+"errors": [
+{"line": 3, "message": "campo obrigatorio"}
+]
+}
+```
+
+## Testes
+
+O projeto utiliza duas estratégias complementares de testes.
+
+### Testes rápidos
 
 ```bash
 mvn test
+```
+
+Executa os testes utilizando H2, sem exigir Docker.
+
+### Testes de integração
+
+```bash
 mvn verify
+```
+
+Executa o ciclo de verificação do Maven, incluindo os testes de integração com PostgreSQL por meio do Testcontainers.
+
+Os testes de integração verificam o comportamento da API, a aplicação das migrações do Flyway e a existência da restrição de unicidade no banco.
+
+### Integração contínua
+
+O GitHub Actions executa `mvn verify` em pushes e pull requests, utilizando Java 17 e o Docker disponível no ambiente de execução para os testes com Testcontainers.
+
+## Como executar
+
+### Pré-requisitos
+
+- Java 17
+- Maven
+- Docker e Docker Compose
+
+### Executar os testes
+
+```bash
+mvn test
+```
+
+Para executar também os testes de integração com PostgreSQL:
+
+```bash
+mvn verify
+```
+
+### Iniciar a aplicação com Docker Compose
+
+```bash
 docker compose up --build -d
 ```
 
-`mvn test` fica no H2, com o Flyway desligado, e não exige Docker. `mvn verify` também sobe o Postgres do Testcontainers.
+A API fica disponível na porta `8080`.
 
-O Compose sobe o Postgres e a API na porta 8080. Credencial local: banco `menu_carga`, usuário `menu`, senha `menu`. Na rede do Compose a API usa o host `postgres`. O `mvn spring-boot:run` nesta máquina continua em `localhost:5432`, no mesmo banco publicado pelo Compose. O volume `menu_carga_pg` guarda a tabela. `docker compose down` sem `-v` preserva esse volume.
+O Compose inicia a aplicação e o PostgreSQL. O volume persistente do banco permite preservar os dados entre reinicializações dos containers.
 
-O workflow [`.github/workflows/test.yml`](.github/workflows/test.yml) dispara em push e pull request, no `ubuntu-latest`, com Temurin 17 e `mvn -B verify`. Não declara serviço de Postgres: o Docker do runner sobe o container do teste.
+Para encerrar os serviços:
 
-## Fora desta entrega
+```bash
+docker compose down
+```
 
-XLSX, Spring Security, JWT, `/v2`, CRUD de usuário, revogação, seed SQL. O frontend fica em outro repositório.
+Esse comando preserva o volume do banco. Para remover também os dados persistidos, seria necessário excluir explicitamente o volume.
 
-Diário de desenvolvimento: [DIARIO.md](DIARIO.md).
+Consulte o `docker-compose.yml` para verificar as configurações locais de conexão com o banco.
+
+## Limitações do escopo
+
+Esta versão concentra-se no gerenciamento de concessões e na importação CSV.
+
+Não fazem parte desta entrega:
+
+- Autenticação e autorização com Spring Security ou JWT.
+- Cadastro e gerenciamento de usuários.
+- Revogação de concessões.
+- Importação de arquivos XLSX.
+- Versionamento da API em `/v2`.
+- Interface frontend.
+
+A API utiliza o parâmetro `pessoa` para identificar a consulta, mas ainda não autentica a identidade de quem realiza a requisição. Portanto, o projeto não deve ser considerado um sistema de controle de acesso pronto para produção.
+
+## Autor
+
+**Denzel Washington Santana Barbosa**
+
+- GitHub: [@denzelws](https://github.com/denzelws)
+- Portfólio: [denzelws.vercel.app](https://denzelws.vercel.app/)
