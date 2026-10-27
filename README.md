@@ -25,7 +25,7 @@ flowchart LR
   svc[Service]
   leitor[LeitorDeLinhas]
   repo[Repositorio JPA]
-  db[(H2 concessao)]
+  db[(Postgres concessao)]
 
   client --> ctrl
   ctrl --> svc
@@ -47,10 +47,16 @@ Os testes passam pela API. Sem seed SQL.
 
 ```bash
 mvn test
+mvn verify
+docker compose up --build -d
 ```
+
+`mvn test` fica no H2. `mvn verify` sobe um Postgres 16 efêmero com Testcontainers e aplica o Flyway. O mesmo `mvn verify` roda no GitHub Actions, em push e pull request, no `ubuntu-latest`. O workflow não declara serviço de Postgres: o Docker do runner sobe o container do teste.
+
+O Compose sobe o Postgres e a API na porta 8080. Credencial local: banco `menu_carga`, usuário `menu`, senha `menu`. Na rede do Compose a API usa o host `postgres`. O `mvn spring-boot:run` nesta máquina continua em `localhost:5432`.
 
 ## Fora desta entrega
 
-XLSX, PostgreSQL, Flyway, Docker, Spring Security, JWT, `/v2`, CRUD de usuário, revogação, seed SQL. O frontend fica em outro repositório.
+XLSX, Spring Security, JWT, `/v2`, CRUD de usuário, revogação, seed SQL. O frontend fica em outro repositório.
 
 Diário de desenvolvimento: [DIARIO.md](DIARIO.md).

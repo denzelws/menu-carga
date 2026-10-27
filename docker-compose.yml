@@ -9,6 +9,23 @@ services:
       - "5432:5432"
     volumes:
       - menu_carga_pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U menu -d menu_carga"]
+      interval: 2s
+      timeout: 5s
+      retries: 20
+
+  api:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/menu_carga
+      SPRING_DATASOURCE_USERNAME: menu
+      SPRING_DATASOURCE_PASSWORD: menu
+    depends_on:
+      postgres:
+        condition: service_healthy
 
 volumes:
   menu_carga_pg:

@@ -132,7 +132,7 @@ Detalhe: [docs/etapas/etapa-05-duplicada.md](docs/etapas/etapa-05-duplicada.md).
 
 ## Evolução B — PostgreSQL
 
-Estado: B4 fechada em 26 de outubro de 2026. V1 e V2 aplicadas no Postgres. A linha da Ana sobrevive ao restart da API. O `mvn test` segue no H2. A API no Compose fica para a B5.
+Estado: etapa C escrita em 26 de outubro de 2026. O workflow roda `mvn verify` com Java 17. O check verde no GitHub depende do push.
 
 Preparação do ambiente. O Docker Desktop ficou no motor WSL2. O socket `/var/run/docker.sock` é `root:docker`, modo `660`. O usuário da WSL já estava no grupo `docker` no `/etc/group`, mas a sessão tinha começado antes disso: `id -nG` não listava `docker` e o `docker compose` respondia `permission denied`. O `newgrp` não existe nesta WSL. O socket não foi aberto com `chmod 666`. Saída imediata: `sudo docker compose`. Saída duradoura: `wsl --shutdown` no PowerShell do Windows e abrir o Ubuntu de novo, para a sessão carregar o grupo.
 
@@ -165,6 +165,12 @@ Análises da B3, em 26 de outubro de 2026:
 
 B4 fechada em 26 de outubro de 2026. O `POST /concessoes` da Ana respondeu 201 e o log mostrou o `INSERT`. A API foi encerrada e subiu de novo, sem `docker compose down` e sem `-v`. O Flyway registrou `Schema "public" is up to date. No migration necessary.` O `GET /modulos/menu?pessoa=Ana` respondeu 200 `{ "permitido": true }`. O segundo POST respondeu 409 `{ "error": "concessao duplicada" }` e o log dessa chamada só tem `SELECT`. O `mvn test` passou abrindo `jdbc:h2:mem:menu-carga`, com o container do Postgres ainda ligado. A linha não está na memória do processo.
 
-A carga manual e a etapa 4 fecharam no H2, antes desta evolução. O `mvn test` continua no H2, com o Flyway desligado, para a suíte não depender do Compose. O `mvn spring-boot:run` desta evolução grava no Postgres.
+Integração fechada em 26 de outubro de 2026. O teste nasceu antes da dependência. O `mvn test-compile` falhou com `package org.testcontainers.containers does not exist`. Com Testcontainers e o Failsafe no `pom.xml`, o `mvn test` passou no H2 e não executou `CargaPostgresIT`.
+
+O primeiro `mvn verify` falhou com `Could not find a valid Docker environment` e `Can't get Docker image: postgres:16`. A sessão não tinha o grupo `docker` (`id -nG` não listava), embora `/etc/group` já tivesse o usuário. O socket continua `root:docker`, modo `660`. Não houve `chmod 666`. A segunda execução usou `sudo -g docker mvn verify` e passou: Testcontainers 1.21.4, container `postgres:16` no banco `test`, Flyway aplicou as versões 1 e 2 (`Successfully applied 2 migrations ... now at version v2`), Postgres 16.15, `Tests run: 1, Failures: 0`. O volume `menu_carga_pg` não entrou nesse teste.
+
+B5 fechada em 26 de outubro de 2026. `Dockerfile` em dois estágios: Maven 3.9 com Temurin 17 gera o jar, Temurin 17 JRE executa. O serviço `api` no Compose aponta `SPRING_DATASOURCE_URL` para `jdbc:postgresql://postgres:5432/menu_carga`, com usuário e senha `menu`. O Postgres ganhou `pg_isready` para a API só subir com o banco aceitando conexão. O processo que ocupava a porta 8080 foi encerrado. O `docker compose up --build -d` recriou o container do Postgres por causa do healthcheck e manteve o volume `menu_carga_pg`. O log da API registrou `Schema "public" is up to date. No migration necessary.` O `GET /modulos/menu?pessoa=Ana` respondeu 200 `{ "permitido": true }`. O `POST /concessoes` da Ana respondeu 409 `{ "error": "concessao duplicada" }`. `docker compose restart api`, sem `-v`, subiu de novo com o schema em dia e o GET continuou `true`. O `mvn test` passou no H2, fora do Compose.
+
+A carga manual e a etapa 4 fecharam no H2, antes desta evolução. O `mvn test` continua no H2, com o Flyway desligado, para a suíte não depender do Docker. O `mvn verify` é o comando que sobe o Postgres do Testcontainers. O `mvn spring-boot:run` desta evolução grava no Postgres do Compose. Etapa C escrita em 26 de outubro de 2026. `.github/workflows/test.yml` dispara em push e pull request, no `ubuntu-latest`, com Temurin 17 e `mvn -B verify`. Não há serviço de Postgres no workflow. O `CargaPostgresIT` sobe o `postgres:16` pelo Docker do runner. O check verde ainda não existe: ele aparece depois do push deste arquivo.
 
 SQL Server ficou de fora deste módulo. O banco desta evolução é o PostgreSQL.
