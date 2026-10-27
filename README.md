@@ -1,5 +1,7 @@
 # menu-carga
 
+[![test](https://github.com/denzelws/menu-carga/actions/workflows/test.yml/badge.svg)](https://github.com/denzelws/menu-carga/actions/workflows/test.yml)
+
 API em Java 17 e Spring Boot 3 que grava e consulta permissão de acesso a um módulo. Carga em lote por CSV. Consulta por pessoa.
 
 A execução usa PostgreSQL 16. O Flyway aplica o schema. Os testes de API ficam no H2. O `mvn verify` sobe um Postgres 16 efêmero com Testcontainers. O GitHub Actions roda esse mesmo `mvn verify`.
@@ -46,6 +48,26 @@ flowchart LR
 3. `POST /concessoes` e depois `GET /modulos/menu?pessoa=Ana`: `{ "permitido": true }`. Sem concessão: `{ "permitido": false }`.
 4. `GET /modulos/menu`: **200**. `GET /modules/menu`: **404**.
 5. Segundo `POST /concessoes` da mesma pessoa e do mesmo path: **409** `{ "error": "concessao duplicada" }`. Na carga, a linha repetida responde **200**, não grava de novo e devolve `concessao duplicada`.
+
+```bash
+curl -sS -D - -X POST http://localhost:8080/concessoes \
+  -H 'Content-Type: application/json' \
+  -d '{"pessoa":"Ana","modulo":"Cardapio","path":"/modulos/menu","direito":"ACESSO"}'
+```
+
+A primeira resposta é **201**, com corpo vazio. A mesma chamada de novo responde **409**:
+
+```json
+{"error":"concessao duplicada"}
+```
+
+```bash
+curl -sS 'http://localhost:8080/modulos/menu?pessoa=Ana'
+```
+
+```json
+{"permitido":true}
+```
 
 Os testes passam pela API. Sem seed SQL. `CargaPostgresIT` repete a carga da Ana num Postgres 16, confere as versões 1 e 2 em `flyway_schema_history` e o índice `concessao_pessoa_path_uk`.
 
