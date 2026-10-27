@@ -132,7 +132,7 @@ Detalhe: [docs/etapas/etapa-05-duplicada.md](docs/etapas/etapa-05-duplicada.md).
 
 ## Evolução B — PostgreSQL
 
-Estado: B3 fechada em 26 de outubro de 2026. V1 e V2 aplicadas no Postgres. O `mvn test` segue no H2. A prova de restart da Ana fica para a B4.
+Estado: B4 fechada em 26 de outubro de 2026. V1 e V2 aplicadas no Postgres. A linha da Ana sobrevive ao restart da API. O `mvn test` segue no H2. A API no Compose fica para a B5.
 
 Preparação do ambiente. O Docker Desktop ficou no motor WSL2. O socket `/var/run/docker.sock` é `root:docker`, modo `660`. O usuário da WSL já estava no grupo `docker` no `/etc/group`, mas a sessão tinha começado antes disso: `id -nG` não listava `docker` e o `docker compose` respondia `permission denied`. O `newgrp` não existe nesta WSL. O socket não foi aberto com `chmod 666`. Saída imediata: `sudo docker compose`. Saída duradoura: `wsl --shutdown` no PowerShell do Windows e abrir o Ubuntu de novo, para a sessão carregar o grupo.
 
@@ -163,6 +163,8 @@ Análises da B3, em 26 de outubro de 2026:
 - A checagem `existsByPessoaAndPathAndAtivaTrue` permanece. Ela existe para a API responder 409, e para a carga recusar a linha sem marcar a transação inteira para rollback. O índice não substitui essa checagem. Ele trava a corrida de dois processos gravando o mesmo par ao mesmo tempo.
 - O volume `menu_carga_pg` agora guarda a tabela e o histórico das versões 1 e 2. `docker compose down` sem `-v` preserva isso. Outro `down -v` apagaria as duas migrações já aplicadas.
 
-A carga manual e a etapa 4 fecharam no H2, antes desta evolução. O `mvn test` continua no H2, com o Flyway desligado, para a suíte não depender do Compose. O `mvn spring-boot:run` desta evolução grava no Postgres. A prova de que a Ana sobrevive a um restart fica na B4.
+B4 fechada em 26 de outubro de 2026. O `POST /concessoes` da Ana respondeu 201 e o log mostrou o `INSERT`. A API foi encerrada e subiu de novo, sem `docker compose down` e sem `-v`. O Flyway registrou `Schema "public" is up to date. No migration necessary.` O `GET /modulos/menu?pessoa=Ana` respondeu 200 `{ "permitido": true }`. O segundo POST respondeu 409 `{ "error": "concessao duplicada" }` e o log dessa chamada só tem `SELECT`. O `mvn test` passou abrindo `jdbc:h2:mem:menu-carga`, com o container do Postgres ainda ligado. A linha não está na memória do processo.
+
+A carga manual e a etapa 4 fecharam no H2, antes desta evolução. O `mvn test` continua no H2, com o Flyway desligado, para a suíte não depender do Compose. O `mvn spring-boot:run` desta evolução grava no Postgres.
 
 SQL Server ficou de fora deste módulo. O banco desta evolução é o PostgreSQL.
