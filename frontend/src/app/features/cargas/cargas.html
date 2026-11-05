@@ -1,14 +1,17 @@
 <section class="space-y-6">
   <header>
     <p class="text-xs font-medium uppercase tracking-wide text-text-400">POST /cargas</p>
-    <h2 class="mt-1 text-2xl font-semibold text-text-900">Importação em Lote via CSV</h2>
+    <h2 class="mt-1 text-xl font-semibold text-text-900 sm:text-2xl">Importação em Lote via CSV</h2>
     <p class="mt-1 text-sm text-text-500">
       Envie um CSV com o cabeçalho pessoa,modulo,path,direito. O lote responde 200 mesmo quando
       alguma linha falha.
     </p>
   </header>
 
-  <form class="rounded-2xl border border-border-200 bg-surface p-6" (submit)="enviar($event)">
+  <form
+    class="rounded-2xl border border-border-200 bg-surface p-4 sm:p-6"
+    (submit)="enviar($event)"
+  >
     <label class="text-sm font-medium text-text-900" for="arquivo">Arquivo CSV</label>
     <input
       id="arquivo"
@@ -20,7 +23,7 @@
     />
     @if (arquivo(); as escolhido) {
       <div class="mt-3 flex items-center gap-2">
-        <span class="text-sm text-text-900">{{ escolhido.name }}</span>
+        <span class="min-w-0 truncate text-sm text-text-900">{{ escolhido.name }}</span>
         <button
           id="remover"
           type="button"
@@ -48,11 +51,11 @@
       Parte multipart arquivo. O modelo traz só o cabeçalho. Preencha as linhas e importe o mesmo
       arquivo.
     </p>
-    <div class="mt-4 flex flex-wrap gap-2">
+    <div class="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
       <button
         type="submit"
         [disabled]="!arquivo() || estado() === 'enviando'"
-        class="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-50"
+        class="w-full rounded-lg bg-brand-600 px-4 py-3 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-50 sm:w-auto sm:py-2"
       >
         Importar
       </button>
@@ -60,7 +63,7 @@
         id="modelo"
         type="button"
         (click)="baixarModelo()"
-        class="rounded-lg border border-border-200 bg-surface px-4 py-2 text-sm font-medium text-text-900 hover:bg-bg-50"
+        class="w-full rounded-lg border border-border-200 bg-surface px-4 py-3 text-sm font-medium text-text-900 hover:bg-bg-50 sm:w-auto sm:py-2"
       >
         Baixar modelo
       </button>
@@ -69,7 +72,7 @@
 
   @if (estado() === 'resultado' && resultado(); as lote) {
     <div class="space-y-4">
-      <div class="rounded-2xl border border-success-100 bg-success-50 p-6">
+      <div class="rounded-2xl border border-success-100 bg-success-50 p-4 sm:p-6">
         <p class="text-xs font-medium uppercase tracking-wide text-success-800">HTTP 200</p>
         <h3 class="mt-1 text-lg font-semibold text-text-900">Lote processado</h3>
         <p class="mt-1 text-sm text-success-800">
@@ -82,7 +85,7 @@
       </div>
 
       @if (lote.errors.length === 0) {
-        <div class="rounded-2xl border border-border-200 bg-surface p-6">
+        <div class="rounded-2xl border border-border-200 bg-surface p-4 sm:p-6">
           <p class="text-sm text-text-500">Nenhuma linha com erro.</p>
         </div>
       } @else {
@@ -109,7 +112,7 @@
   }
 
   @if (estado() === 'rejeitado') {
-    <div class="rounded-2xl border border-error-50 bg-error-50 p-6">
+    <div class="rounded-2xl border border-error-50 bg-error-50 p-4 sm:p-6">
       <p class="text-xs font-medium uppercase tracking-wide text-error-600">HTTP 400</p>
       <h3 class="mt-1 text-lg font-semibold text-text-900">Arquivo rejeitado</h3>
       <p class="mt-1 text-sm text-error-800">
@@ -120,7 +123,7 @@
 
   @if (estado() === 'erro') {
     <div
-      class="rounded-2xl border border-error-50 bg-error-50 p-6 text-sm font-medium text-error-800"
+      class="rounded-2xl border border-error-50 bg-error-50 p-4 sm:p-6 text-sm font-medium text-error-800"
     >
       {{ erro() }}
     </div>

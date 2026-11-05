@@ -1,19 +1,19 @@
 <section class="space-y-6">
   <header>
     <p class="text-xs font-medium uppercase tracking-wide text-text-400">POST /concessoes</p>
-    <h2 class="mt-1 text-2xl font-semibold text-text-900">Concessão Manual</h2>
+    <h2 class="mt-1 text-xl font-semibold text-text-900 sm:text-2xl">Concessão Manual</h2>
     <p class="mt-1 text-sm text-text-500">
       Grave uma concessão ativa para uma pessoa. O caminho e o direito já vêm travados.
     </p>
   </header>
 
   <form
-    class="rounded-2xl border border-border-200 bg-surface p-6"
+    class="rounded-2xl border border-border-200 bg-surface p-4 sm:p-6"
     [formGroup]="form"
     (ngSubmit)="salvar()"
     novalidate
   >
-    <div class="grid gap-4 sm:grid-cols-2">
+    <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
       <div>
         <label class="text-sm font-medium text-text-900" for="pessoa">Nome da pessoa</label>
         <input
@@ -21,7 +21,7 @@
           formControlName="pessoa"
           [attr.maxlength]="maxPessoa"
           placeholder="Ana"
-          class="mt-2 w-full rounded-lg border border-border-200 bg-bg-50 px-3 py-2 text-sm outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-600/20"
+          class="mt-2 w-full rounded-lg border border-border-200 bg-bg-50 px-3 py-3 text-base outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-600/20 sm:py-2 sm:text-sm"
         />
         @if (form.controls.pessoa.touched && form.controls.pessoa.invalid) {
           <p class="mt-1 text-xs text-error-600">Informe a pessoa, sem ficar em branco.</p>
@@ -35,7 +35,7 @@
           formControlName="modulo"
           [attr.maxlength]="maxModulo"
           placeholder="gestao-estoque"
-          class="mt-2 w-full rounded-lg border border-border-200 bg-bg-50 px-3 py-2 text-sm outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-600/20"
+          class="mt-2 w-full rounded-lg border border-border-200 bg-bg-50 px-3 py-3 text-base outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-600/20 sm:py-2 sm:text-sm"
         />
         @if (form.controls.modulo.touched && form.controls.modulo.invalid) {
           <p class="mt-1 text-xs text-error-600">Informe o módulo, sem ficar em branco.</p>
@@ -47,7 +47,7 @@
         <input
           id="path"
           formControlName="path"
-          class="mt-2 w-full rounded-lg border border-border-200 bg-bg-50 px-3 py-2 text-sm text-text-500"
+          class="mt-2 w-full rounded-lg border border-border-200 bg-bg-50 px-3 py-3 text-base text-text-500 sm:py-2 sm:text-sm"
         />
       </div>
 
@@ -56,7 +56,7 @@
         <input
           id="direito"
           formControlName="direito"
-          class="mt-2 w-full rounded-lg border border-border-200 bg-bg-50 px-3 py-2 text-sm text-text-500"
+          class="mt-2 w-full rounded-lg border border-border-200 bg-bg-50 px-3 py-3 text-base text-text-500 sm:py-2 sm:text-sm"
         />
       </div>
     </div>
@@ -68,14 +68,14 @@
     <button
       type="submit"
       [disabled]="estado() === 'enviando'"
-      class="mt-4 rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-50"
+      class="mt-4 w-full rounded-lg bg-brand-600 px-4 py-3 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-50 sm:w-auto sm:py-2"
     >
       Conceder
     </button>
   </form>
 
   @if (estado() === 'incompleto') {
-    <div class="rounded-2xl border border-error-50 bg-error-50 p-6">
+    <div class="rounded-2xl border border-error-50 bg-error-50 p-4 sm:p-6">
       <p class="text-xs font-medium uppercase tracking-wide text-error-600">Formulário</p>
       <h3 class="mt-1 text-lg font-semibold text-text-900">Campos incompletos</h3>
       <p class="mt-1 text-sm text-error-800">
@@ -85,7 +85,7 @@
   }
 
   @if (estado() === 'criado') {
-    <div class="rounded-2xl border border-success-100 bg-success-50 p-6">
+    <div class="rounded-2xl border border-success-100 bg-success-50 p-4 sm:p-6">
       <p class="text-xs font-medium uppercase tracking-wide text-success-800">HTTP 201</p>
       <h3 class="mt-1 text-lg font-semibold text-text-900">Concessão gravada</h3>
       <p class="mt-1 text-sm text-success-800">
@@ -95,7 +95,7 @@
   }
 
   @if (estado() === 'duplicada') {
-    <div class="rounded-2xl border border-error-50 bg-error-50 p-6">
+    <div class="rounded-2xl border border-error-50 bg-error-50 p-4 sm:p-6">
       <p class="text-xs font-medium uppercase tracking-wide text-error-600">HTTP 409</p>
       <h3 class="mt-1 text-lg font-semibold text-text-900">Concessão duplicada</h3>
       <p class="mt-1 text-sm text-error-800">
@@ -106,7 +106,7 @@
 
   @if (estado() === 'erro') {
     <div
-      class="rounded-2xl border border-error-50 bg-error-50 p-6 text-sm font-medium text-error-800"
+      class="rounded-2xl border border-error-50 bg-error-50 p-4 sm:p-6 text-sm font-medium text-error-800"
     >
       {{ erro() }}
     </div>

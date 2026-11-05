@@ -1,12 +1,14 @@
 <div class="min-h-screen bg-bg-50">
-  <header class="border-b border-border-200 bg-surface">
-    <div class="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3 px-4 py-3">
-      <div class="flex items-center gap-2">
-        <img src="favicon.svg" alt="" width="32" height="32" class="h-8 w-8" />
-        <h1 class="text-base font-semibold text-text-900">Menu Carga</h1>
-        <span class="rounded-lg bg-bg-50 px-2 py-0.5 text-xs text-text-500">Spring Boot API</span>
+  <header class="sticky top-0 z-10 border-b border-border-200 bg-surface">
+    <div class="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3">
+      <div class="flex min-w-0 items-center gap-2">
+        <img src="favicon.svg" alt="" width="32" height="32" class="h-8 w-8 shrink-0" />
+        <h1 class="truncate text-base font-semibold text-text-900">Menu Carga</h1>
+        <span class="hidden rounded-lg bg-bg-50 px-2 py-0.5 text-xs text-text-500 sm:inline"
+          >Spring Boot API</span
+        >
       </div>
-      <nav class="flex flex-wrap gap-1 text-sm">
+      <nav class="hidden gap-1 text-sm sm:flex">
         <a
           routerLink="/"
           routerLinkActive="ativo"
@@ -29,10 +31,78 @@
       </nav>
     </div>
   </header>
-  <main class="mx-auto max-w-5xl px-4 py-8">
+
+  <main class="mx-auto max-w-5xl px-4 py-6 pb-24 sm:py-8 sm:pb-8">
     <router-outlet />
   </main>
-  <footer class="border-t border-border-200 px-4 py-4 text-center text-xs text-text-400">
+
+  <footer
+    class="hidden border-t border-border-200 px-4 py-4 text-center text-xs text-text-400 sm:block"
+  >
     Menu Carga · Gestão de concessões · sem listagem global
   </footer>
+
+  <nav
+    class="fixed inset-x-0 bottom-0 z-10 border-t border-border-200 bg-surface pb-[env(safe-area-inset-bottom)] sm:hidden"
+  >
+    <div class="mx-auto flex max-w-lg">
+      <a
+        routerLink="/"
+        routerLinkActive="ativo"
+        [routerLinkActiveOptions]="{ exact: true }"
+        aria-label="Consultar Permissão"
+        class="flex flex-1 flex-col items-center gap-1 px-2 py-2 text-xs text-text-500 [&.ativo]:text-brand-600"
+      >
+        <svg
+          viewBox="0 0 24 24"
+          class="h-5 w-5"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          aria-hidden="true"
+        >
+          <circle cx="11" cy="11" r="7" />
+          <path d="M20 20l-3.5-3.5" stroke-linecap="round" />
+        </svg>
+        Consultar
+      </a>
+      <a
+        routerLink="/cadastro"
+        routerLinkActive="ativo"
+        aria-label="Concessão Manual"
+        class="flex flex-1 flex-col items-center gap-1 px-2 py-2 text-xs text-text-500 [&.ativo]:text-brand-600"
+      >
+        <svg
+          viewBox="0 0 24 24"
+          class="h-5 w-5"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          aria-hidden="true"
+        >
+          <path d="M12 5v14M5 12h14" stroke-linecap="round" />
+        </svg>
+        Concessão
+      </a>
+      <a
+        routerLink="/cargas"
+        routerLinkActive="ativo"
+        aria-label="Importação CSV"
+        class="flex flex-1 flex-col items-center gap-1 px-2 py-2 text-xs text-text-500 [&.ativo]:text-brand-600"
+      >
+        <svg
+          viewBox="0 0 24 24"
+          class="h-5 w-5"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          aria-hidden="true"
+        >
+          <path d="M12 16V4M12 4l-4 4M12 4l4 4" stroke-linecap="round" stroke-linejoin="round" />
+          <path d="M4 20h16" stroke-linecap="round" />
+        </svg>
+        Importação
+      </a>
+    </div>
+  </nav>
 </div>
