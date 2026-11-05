@@ -2,9 +2,9 @@
 
 [![Testes](https://github.com/denzelws/menu-carga/actions/workflows/test.yml/badge.svg)](https://github.com/denzelws/menu-carga/actions/workflows/test.yml)
 
-API REST desenvolvida com Java 17 e Spring Boot 3 para gerenciamento e consulta de concessões de acesso, com suporte à importação de registros em lote via CSV.
+API REST desenvolvida com Java 17 e Spring Boot 3 para gerenciamento e consulta de concessões de acesso, com suporte à importação de registros em lote via CSV. O cliente em `frontend/` cobre essas mesmas operações.
 
-O projeto demonstra validação de dados, separação de responsabilidades, persistência relacional, integridade de dados e testes automatizados em diferentes ambientes.
+O projeto demonstra validação de dados, separação de responsabilidades, persistência relacional, integridade de dados, testes automatizados em diferentes ambientes e uma interface que consome o contrato HTTP sem alterá-lo.
 
 Diário de desenvolvimento: [DIARIO.md](DIARIO.md).
 
@@ -17,6 +17,7 @@ Diário de desenvolvimento: [DIARIO.md](DIARIO.md).
 - Identificação de erros por linha durante a importação.
 - Prevenção de concessões duplicadas.
 - Persistência com PostgreSQL e migrações versionadas.
+- Interface para consulta, cadastro manual e importação CSV.
 - Testes automatizados e integração contínua.
 
 ## Tecnologias
@@ -31,6 +32,10 @@ Diário de desenvolvimento: [DIARIO.md](DIARIO.md).
 - **Infraestrutura:** Docker e Docker Compose
 - **CI:** GitHub Actions
 - **Build:** Maven
+- **Frontend:** Angular 21.2
+- **Linguagem do cliente:** TypeScript 5.9
+- **Estilo:** Tailwind CSS 4
+- **Testes do cliente:** Vitest e Playwright
 
 ## Como funciona
 
@@ -56,14 +61,16 @@ A aplicação utiliza uma arquitetura em camadas, com responsabilidades separada
 
 ```mermaid
 flowchart TD
-Client[Cliente HTTP]
+Browser[Navegador]
+Angular[Cliente Angular]
 Controller[Controller]
 Service[Service]
 Reader[Leitor e validador CSV]
 Repository[Repositório JPA]
 Database[(PostgreSQL)]
 
-Client --> Controller
+Browser --> Angular
+Angular --> Controller
 Controller --> Service
 Service --> Reader
 Service --> Repository
@@ -78,6 +85,7 @@ Repository --> Database
 - **Hibernate:** `ddl-auto=validate` verifica a compatibilidade entre as entidades e o schema existente, sem criar as tabelas automaticamente.
 - **Integridade dos dados:** a duplicidade é verificada na aplicação e protegida por um índice único no PostgreSQL.
 - **Testes de integração:** o Testcontainers permite executar testes com uma instância isolada do PostgreSQL.
+- **Cliente separado:** o Angular fica em `frontend/` e conversa com a API por HTTP. O proxy de desenvolvimento remove o prefixo `/api` e não entra no build.
 
 ## Contrato da API
 
@@ -173,9 +181,15 @@ Executa o ciclo de verificação do Maven, incluindo os testes de integração c
 
 Os testes de integração verificam o comportamento da API, a aplicação das migrações do Flyway e a existência da restrição de unicidade no banco.
 
+### Testes do cliente
+
+Na pasta `frontend/`, `npm test` executa os testes unitários com Vitest, sem a API. `npm run e2e` executa o fluxo real com Playwright e exige a API na porta `8080`.
+
+O detalhe das telas, do proxy e das versões está em [frontend/README.md](frontend/README.md).
+
 ### Integração contínua
 
-O GitHub Actions executa `mvn verify` em pushes e pull requests, utilizando Java 17 e o Docker disponível no ambiente de execução para os testes com Testcontainers.
+O GitHub Actions executa `mvn verify` em pushes e pull requests, utilizando Java 17 e o Docker disponível no ambiente de execução para os testes com Testcontainers. Os testes do cliente não entram nesse fluxo.
 
 ## Como executar
 
@@ -184,6 +198,7 @@ O GitHub Actions executa `mvn verify` em pushes e pull requests, utilizando Java
 - Java 17
 - Maven
 - Docker e Docker Compose
+- Node 24 e npm 11.17.0, para o cliente
 
 ### Executar os testes
 
@@ -217,6 +232,18 @@ Esse comando preserva o volume do banco. Para remover também os dados persistid
 
 Consulte o `docker-compose.yml` para verificar as configurações locais de conexão com o banco.
 
+### Iniciar o cliente
+
+Com a API disponível na porta `8080`:
+
+```bash
+cd frontend
+npm install
+npm start
+```
+
+O cliente fica disponível em `http://localhost:4200/`. A execução, o proxy e os testes estão descritos em [frontend/README.md](frontend/README.md).
+
 ## Limitações do escopo
 
 Esta versão concentra-se no gerenciamento de concessões e na importação CSV.
@@ -228,7 +255,8 @@ Não fazem parte desta entrega:
 - Revogação de concessões.
 - Importação de arquivos XLSX.
 - Versionamento da API em `/v2`.
-- Interface frontend.
+- Listagem de concessões. A API não oferece `GET /concessoes`.
+- Publicação do cliente.
 
 A API utiliza o parâmetro `pessoa` para identificar a consulta, mas ainda não autentica a identidade de quem realiza a requisição. Portanto, o projeto não deve ser considerado um sistema de controle de acesso pronto para produção.
 
