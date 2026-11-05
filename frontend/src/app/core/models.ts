@@ -24,6 +24,8 @@ export interface ErroArquivo {
   error: string;
 }
 
+/** Cabeçalho exigido por `POST /cargas`. O modelo baixado na tela leva só esta linha. */
+export const CABECALHO_CSV = 'pessoa,modulo,path,direito';
 export const PATH_MODULOS_MENU = '/modulos/menu';
 export const DIREITO_ACESSO = 'ACESSO';
 /** Espelha `concessao.pessoa` varchar(255) da V1. */
