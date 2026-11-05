@@ -1,0 +1,90 @@
+<section class="space-y-6">
+  <header>
+    <p class="text-xs font-medium uppercase tracking-wide text-text-400">GET /modulos/menu</p>
+    <h2 class="mt-1 text-2xl font-semibold text-text-900">Consultar Permissão</h2>
+    <p class="mt-1 text-sm text-text-500">
+      Verifique o status de acesso por pessoa na API do Menu Carga.
+    </p>
+  </header>
+
+  <div class="rounded-2xl border border-border-200 bg-surface p-6">
+    <label class="text-sm font-medium text-text-900" for="pessoa">Nome da pessoa</label>
+    <div class="mt-2 flex flex-col gap-2 sm:flex-row">
+      <input
+        id="pessoa"
+        [(ngModel)]="pessoa"
+        (keyup.enter)="consultar()"
+        placeholder="Ana"
+        class="w-full rounded-lg border border-border-200 bg-bg-50 px-3 py-2 text-sm outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-600/20"
+      />
+      <button
+        (click)="consultar()"
+        [disabled]="estado() === 'carregando'"
+        class="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-50"
+      >
+        Consultar
+      </button>
+    </div>
+    <p class="mt-2 text-xs text-text-400">Busca síncrona. Sem listagem global de concessões.</p>
+  </div>
+
+  @if (estado() === 'inicial') {
+    <div class="rounded-2xl border border-border-200 bg-surface p-6">
+      <p class="text-xs font-medium uppercase tracking-wide text-text-400">Estado 01 · Neutro</p>
+      <h3 class="mt-1 text-lg font-semibold text-text-900">Nenhuma consulta realizada</h3>
+      <p class="mt-1 text-sm text-text-500">Informe o nome de uma pessoa e clique em Consultar.</p>
+    </div>
+  }
+
+  @if (estado() === 'permitido') {
+    <div class="rounded-2xl border border-success-100 bg-success-50 p-6">
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <p class="text-xs font-medium uppercase tracking-wide text-success-800">
+            Estado 02 · Acesso autorizado
+          </p>
+          <h3 class="mt-1 text-lg font-semibold text-text-900">{{ pessoa() }}</h3>
+        </div>
+        <span class="rounded-lg bg-success-800 px-2 py-0.5 text-xs font-medium text-white"
+          >permitido: true</span
+        >
+      </div>
+      <p class="mt-3 text-sm text-success-800">HTTP 200 · concessão ativa para /modulos/menu.</p>
+    </div>
+  }
+
+  @if (estado() === 'negado') {
+    <div class="rounded-2xl border border-error-50 bg-error-50 p-6">
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <p class="text-xs font-medium uppercase tracking-wide text-error-600">
+            Estado 03 · Acesso restrito
+          </p>
+          <h3 class="mt-1 text-lg font-semibold text-text-900">{{ pessoa() }}</h3>
+        </div>
+        <span class="rounded-lg bg-error-600 px-2 py-0.5 text-xs font-medium text-white"
+          >permitido: false</span
+        >
+      </div>
+      <p class="mt-3 text-sm text-error-800">
+        HTTP 200 · não há concessão ativa para esta pessoa neste caminho.
+      </p>
+    </div>
+  }
+
+  @if (estado() === 'vazio') {
+    <div class="rounded-2xl border border-border-200 bg-surface p-6">
+      <p class="text-sm text-text-500">
+        A API devolveu 200 com corpo vazio. Informe uma pessoa para consultar.
+      </p>
+    </div>
+  }
+
+  @if (estado() === 'erro') {
+    <div
+      class="rounded-2xl border border-error-50 bg-error-50 p-6 text-sm font-medium text-error-800"
+    >
+      {{ erro() }}
+    </div>
+  }
+</section>

@@ -1,0 +1,37 @@
+<div class="min-h-screen bg-bg-50">
+  <header class="border-b border-border-200 bg-surface">
+    <div class="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3 px-4 py-3">
+      <div class="flex items-center gap-2">
+        <h1 class="text-base font-semibold text-text-900">Menu Carga</h1>
+        <span class="rounded-lg bg-bg-50 px-2 py-0.5 text-xs text-text-500">Spring Boot API</span>
+      </div>
+      <nav class="flex flex-wrap gap-1 text-sm">
+        <a
+          routerLink="/"
+          routerLinkActive="bg-brand-600 text-white"
+          [routerLinkActiveOptions]="{ exact: true }"
+          class="rounded-lg px-3 py-1.5 text-text-500 hover:bg-bg-50"
+          >Consultar Permissão</a
+        >
+        <a
+          routerLink="/cadastro"
+          routerLinkActive="bg-brand-600 text-white"
+          class="rounded-lg px-3 py-1.5 text-text-500 hover:bg-bg-50"
+          >Concessão Manual</a
+        >
+        <a
+          routerLink="/cargas"
+          routerLinkActive="bg-brand-600 text-white"
+          class="rounded-lg px-3 py-1.5 text-text-500 hover:bg-bg-50"
+          >Importação CSV</a
+        >
+      </nav>
+    </div>
+  </header>
+  <main class="mx-auto max-w-5xl px-4 py-8">
+    <router-outlet />
+  </main>
+  <footer class="border-t border-border-200 px-4 py-4 text-center text-xs text-text-400">
+    Menu Carga · Gestão de concessões · sem listagem global
+  </footer>
+</div>

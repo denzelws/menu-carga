@@ -1,0 +1,40 @@
+import { Component, inject, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { ConcessoesService } from '../../core/concessoes.service';
+
+type EstadoConsulta = 'inicial' | 'carregando' | 'permitido' | 'negado' | 'vazio' | 'erro';
+
+@Component({
+  selector: 'app-consulta',
+  imports: [FormsModule],
+  templateUrl: './consulta.html',
+})
+export class Consulta {
+  private readonly concessoes = inject(ConcessoesService);
+
+  protected readonly pessoa = signal('');
+  protected readonly estado = signal<EstadoConsulta>('inicial');
+  protected readonly erro = signal('');
+
+  consultar(): void {
+    const nome = this.pessoa().trim();
+    if (!nome) {
+      return;
+    }
+    this.estado.set('carregando');
+    this.erro.set('');
+    this.concessoes.consultar(nome).subscribe({
+      next: (resposta) => {
+        if (resposta === null) {
+          this.estado.set('vazio');
+        } else {
+          this.estado.set(resposta.permitido ? 'permitido' : 'negado');
+        }
+      },
+      error: (e: Error) => {
+        this.estado.set('erro');
+        this.erro.set(e.message);
+      },
+    });
+  }
+}

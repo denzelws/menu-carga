@@ -1,0 +1,30 @@
+/* Estilos globais. Utilitários Tailwind primeiro; CSS manual só para o que utilitário não expressa.
+   Tokens extraídos de docs/evidencias/ui/tokens.jpg (Stitch). */
+
+@import 'tailwindcss';
+
+@theme {
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+
+  --color-bg-50: #f8fafc;
+  --color-surface: #ffffff;
+  --color-border-200: #e2e8f0;
+  --color-text-400: #94a3b8;
+  --color-text-500: #64748b;
+  --color-text-900: #0f172a;
+
+  --color-brand-50: #eff6ff;
+  --color-brand-600: #2563eb;
+  --color-brand-700: #1d4ed8;
+
+  --color-success-50: #f0fdf4;
+  --color-success-100: #dcfce7;
+  --color-success-800: #166534;
+
+  --color-error-50: #fef2f2;
+  --color-error-600: #dc2626;
+  --color-error-800: #991b1b;
+
+  --radius-lg: 8px;
+  --radius-2xl: 16px;
+}
