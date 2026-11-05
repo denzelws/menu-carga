@@ -2,11 +2,113 @@
   <header>
     <p class="text-xs font-medium uppercase tracking-wide text-text-400">POST /concessoes</p>
     <h2 class="mt-1 text-2xl font-semibold text-text-900">Concessão Manual</h2>
-    <p class="mt-1 text-sm text-text-500">Formulário com POST /concessoes. Entra no passo 3.</p>
-  </header>
-  <div class="rounded-2xl border border-border-200 bg-surface p-6">
-    <p class="text-sm text-text-500">
-      Quatro campos: pessoa, módulo, path travado em /modulos/menu, direito travado em ACESSO.
+    <p class="mt-1 text-sm text-text-500">
+      Grave uma concessão ativa para uma pessoa. O caminho e o direito já vêm travados.
     </p>
-  </div>
+  </header>
+
+  <form
+    class="rounded-2xl border border-border-200 bg-surface p-6"
+    [formGroup]="form"
+    (ngSubmit)="salvar()"
+    novalidate
+  >
+    <div class="grid gap-4 sm:grid-cols-2">
+      <div>
+        <label class="text-sm font-medium text-text-900" for="pessoa">Nome da pessoa</label>
+        <input
+          id="pessoa"
+          formControlName="pessoa"
+          [attr.maxlength]="maxPessoa"
+          placeholder="Ana"
+          class="mt-2 w-full rounded-lg border border-border-200 bg-bg-50 px-3 py-2 text-sm outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-600/20"
+        />
+        @if (form.controls.pessoa.touched && form.controls.pessoa.invalid) {
+          <p class="mt-1 text-xs text-error-600">Informe a pessoa, sem ficar em branco.</p>
+        }
+      </div>
+
+      <div>
+        <label class="text-sm font-medium text-text-900" for="modulo">Módulo</label>
+        <input
+          id="modulo"
+          formControlName="modulo"
+          [attr.maxlength]="maxModulo"
+          placeholder="gestao-estoque"
+          class="mt-2 w-full rounded-lg border border-border-200 bg-bg-50 px-3 py-2 text-sm outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-600/20"
+        />
+        @if (form.controls.modulo.touched && form.controls.modulo.invalid) {
+          <p class="mt-1 text-xs text-error-600">Informe o módulo, sem ficar em branco.</p>
+        }
+      </div>
+
+      <div>
+        <label class="text-sm font-medium text-text-900" for="path">Path</label>
+        <input
+          id="path"
+          formControlName="path"
+          class="mt-2 w-full rounded-lg border border-border-200 bg-bg-50 px-3 py-2 text-sm text-text-500"
+        />
+      </div>
+
+      <div>
+        <label class="text-sm font-medium text-text-900" for="direito">Direito</label>
+        <input
+          id="direito"
+          formControlName="direito"
+          class="mt-2 w-full rounded-lg border border-border-200 bg-bg-50 px-3 py-2 text-sm text-text-500"
+        />
+      </div>
+    </div>
+
+    <p class="mt-4 text-xs text-text-400">
+      Pessoa e módulo até {{ maxPessoa }} caracteres. Path e direito não editáveis.
+    </p>
+
+    <button
+      type="submit"
+      [disabled]="estado() === 'enviando'"
+      class="mt-4 rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-50"
+    >
+      Conceder
+    </button>
+  </form>
+
+  @if (estado() === 'incompleto') {
+    <div class="rounded-2xl border border-error-50 bg-error-50 p-6">
+      <p class="text-xs font-medium uppercase tracking-wide text-error-600">Formulário</p>
+      <h3 class="mt-1 text-lg font-semibold text-text-900">Campos incompletos</h3>
+      <p class="mt-1 text-sm text-error-800">
+        Informe a pessoa e o módulo. Espaço em branco não vale.
+      </p>
+    </div>
+  }
+
+  @if (estado() === 'criado') {
+    <div class="rounded-2xl border border-success-100 bg-success-50 p-6">
+      <p class="text-xs font-medium uppercase tracking-wide text-success-800">HTTP 201</p>
+      <h3 class="mt-1 text-lg font-semibold text-text-900">Concessão gravada</h3>
+      <p class="mt-1 text-sm text-success-800">
+        A pessoa passou a ter acesso ativo em /modulos/menu.
+      </p>
+    </div>
+  }
+
+  @if (estado() === 'duplicada') {
+    <div class="rounded-2xl border border-error-50 bg-error-50 p-6">
+      <p class="text-xs font-medium uppercase tracking-wide text-error-600">HTTP 409</p>
+      <h3 class="mt-1 text-lg font-semibold text-text-900">Concessão duplicada</h3>
+      <p class="mt-1 text-sm text-error-800">
+        Já existe concessão ativa desta pessoa para /modulos/menu.
+      </p>
+    </div>
+  }
+
+  @if (estado() === 'erro') {
+    <div
+      class="rounded-2xl border border-error-50 bg-error-50 p-6 text-sm font-medium text-error-800"
+    >
+      {{ erro() }}
+    </div>
+  }
 </section>

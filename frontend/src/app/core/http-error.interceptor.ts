@@ -2,11 +2,22 @@ import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
 import { catchError, throwError } from 'rxjs';
 import { ErroArquivo } from './models';
 
+function corpoJson(corpo: unknown): unknown {
+  if (typeof corpo !== 'string' || corpo.trim() === '') {
+    return corpo;
+  }
+  try {
+    return JSON.parse(corpo) as unknown;
+  } catch {
+    return corpo;
+  }
+}
+
 export function mensagemDeErro(status: number, corpo: unknown): string {
   if (status === 0) {
     return 'API fora do ar. Verifique se o backend está em execução.';
   }
-  const erro = (corpo as ErroArquivo | null)?.error;
+  const erro = (corpoJson(corpo) as ErroArquivo | null)?.error;
   if ((status === 400 || status === 409) && erro) {
     return erro;
   }

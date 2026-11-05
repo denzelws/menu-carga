@@ -26,3 +26,7 @@ export interface ErroArquivo {
 
 export const PATH_MODULOS_MENU = '/modulos/menu';
 export const DIREITO_ACESSO = 'ACESSO';
+/** Espelha `concessao.pessoa` varchar(255) da V1. */
+export const MAX_PESSOA = 255;
+/** Espelha `concessao.modulo` varchar(255) da V1. */
+export const MAX_MODULO = 255;
