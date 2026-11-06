@@ -73,7 +73,7 @@ Proxy --> Controller
 
 ## Testes
 
-O cliente utiliza duas estratégias complementares de testes. Nenhuma delas entra no GitHub Actions, que continua executando `mvn verify` na API.
+O cliente utiliza duas estratégias complementares de testes. Vitest e Playwright continuam locais. O GitHub Actions executa `npm ci` e `npm run build`, e um push na `main` publica o resultado no site.
 
 ### Testes unitários
 

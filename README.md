@@ -189,7 +189,7 @@ O detalhe das telas, do proxy e das versões está em [frontend/README.md](front
 
 ### Integração contínua
 
-O GitHub Actions executa `mvn verify` em pushes e pull requests, utilizando Java 17 e o Docker disponível no ambiente de execução para os testes com Testcontainers. Os testes do cliente não entram nesse fluxo.
+O GitHub Actions executa `mvn verify` em pushes e pull requests, utilizando Java 17 e o Docker disponível no ambiente de execução para os testes com Testcontainers. No mesmo fluxo, `npm ci` e `npm run build` verificam o cliente. Um push na `main` publica esse build no bucket do site e invalida o CloudFront. Vitest e Playwright continuam locais.
 
 ## Como executar
 

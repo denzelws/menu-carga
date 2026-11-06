@@ -15,3 +15,51 @@ jobs:
           java-version: "17"
           cache: maven
       - run: mvn -B verify
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run build
+      - uses: actions/upload-artifact@v4
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        with:
+          name: frontend
+          path: frontend/dist/frontend/browser
+          retention-days: 1
+
+  deploy:
+    needs: [verify, frontend]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: frontend
+          path: frontend-dist
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::584481982786:role/menu-carga-github-deploy
+          aws-region: us-east-1
+      - name: Publish the Angular build
+        run: |
+          aws s3 sync frontend-dist s3://menu-carga-frontend --delete \
+            --exclude "index.html" \
+            --cache-control "public,max-age=31536000,immutable"
+          aws s3 cp frontend-dist/index.html s3://menu-carga-frontend/index.html \
+            --cache-control "no-cache"
+          aws cloudfront create-invalidation \
+            --distribution-id E1UD4N50IXWSZX \
+            --paths "/*"
