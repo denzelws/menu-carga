@@ -2,6 +2,8 @@
 
 [![Testes](https://github.com/denzelws/menu-carga/actions/workflows/test.yml/badge.svg)](https://github.com/denzelws/menu-carga/actions/workflows/test.yml)
 
+Aplicação publicada: [deploy](https://d3jv2nazvut0r1.cloudfront.net).
+
 API REST desenvolvida com Java 17 e Spring Boot 3 para gerenciamento e consulta de concessões de acesso, com suporte à importação de registros em lote via CSV. O cliente em `frontend/` cobre essas mesmas operações.
 
 O projeto demonstra validação de dados, separação de responsabilidades, persistência relacional, integridade de dados, testes automatizados em diferentes ambientes e uma interface que consome o contrato HTTP sem alterá-lo.
