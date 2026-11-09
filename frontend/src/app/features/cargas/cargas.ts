@@ -1,4 +1,5 @@
 import { afterNextRender, Component, ElementRef, inject, signal, viewChild } from '@angular/core';
+import { AvisoAquecimento } from '../../core/aviso-aquecimento';
 import { CargasService } from '../../core/cargas.service';
 import { CABECALHO_CSV, ResultadoCarga } from '../../core/models';
 import { SelecaoDeArquivo } from './selecao-de-arquivo';
@@ -7,6 +8,7 @@ type EstadoCarga = 'inicial' | 'enviando' | 'resultado' | 'rejeitado' | 'erro';
 
 @Component({
   selector: 'app-importacao',
+  imports: [AvisoAquecimento],
   templateUrl: './cargas.html',
 })
 export class Importacao {

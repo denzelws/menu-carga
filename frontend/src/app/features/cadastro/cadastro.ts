@@ -6,6 +6,7 @@ import {
   ValidationErrors,
   Validators,
 } from '@angular/forms';
+import { AvisoAquecimento } from '../../core/aviso-aquecimento';
 import { ConcessoesService } from '../../core/concessoes.service';
 import { DIREITO_ACESSO, MAX_MODULO, MAX_PESSOA, PATH_MODULOS_MENU } from '../../core/models';
 
@@ -21,7 +22,7 @@ function naoBranco(control: AbstractControl): ValidationErrors | null {
 
 @Component({
   selector: 'app-cadastro',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, AvisoAquecimento],
   templateUrl: './cadastro.html',
 })
 export class Cadastro {

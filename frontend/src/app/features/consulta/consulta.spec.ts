@@ -28,6 +28,25 @@ describe('Consulta', () => {
     return { fixture, requisicao };
   }
 
+  it('mostra o indicador no botão enquanto a consulta não volta', () => {
+    const http = TestBed.inject(HttpTestingController);
+    const fixture = TestBed.createComponent(Consulta);
+    fixture.detectChanges();
+    const input = fixture.nativeElement.querySelector('#pessoa') as HTMLInputElement;
+    input.value = 'Ana';
+    input.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+    fixture.componentInstance.consultar();
+    fixture.detectChanges();
+    const botao = fixture.nativeElement.querySelector('button') as HTMLButtonElement;
+    expect(botao.getAttribute('aria-busy')).toBe('true');
+    expect(botao.querySelector('svg')).not.toBeNull();
+    expect(fixture.nativeElement.textContent).not.toContain('estão acordando');
+    http.expectOne((req) => req.url === `${API_PREFIX}/modulos/menu`).flush({ permitido: false });
+    fixture.detectChanges();
+    expect(botao.querySelector('svg')).toBeNull();
+  });
+
   it('mostra permitido quando a API devolve true', () => {
     const { fixture, requisicao } = consultar('Ana', {
       status: 200,

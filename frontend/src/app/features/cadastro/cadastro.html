@@ -68,8 +68,15 @@
     <button
       type="submit"
       [disabled]="estado() === 'enviando'"
-      class="mt-4 w-full rounded-lg bg-brand-600 px-4 py-3 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-50 sm:w-auto sm:py-2"
+      [attr.aria-busy]="estado() === 'enviando'"
+      class="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-brand-600 px-4 py-3 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-50 sm:w-auto sm:py-2"
     >
+      @if (estado() === 'enviando') {
+        <svg viewBox="0 0 24 24" class="h-4 w-4 animate-spin" fill="none" aria-hidden="true">
+          <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="3" class="opacity-30" />
+          <path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" stroke-width="3" stroke-linecap="round" />
+        </svg>
+      }
       Conceder
     </button>
   </form>
@@ -103,6 +110,8 @@
       </p>
     </div>
   }
+
+  <app-aviso-aquecimento [ativo]="estado() === 'enviando'" />
 
   @if (estado() === 'erro') {
     <div

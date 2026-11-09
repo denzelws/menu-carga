@@ -193,6 +193,8 @@ O detalhe das telas, do proxy e das versões está em [frontend/README.md](front
 
 O GitHub Actions executa `mvn verify` em pushes e pull requests, utilizando Java 17 e o Docker disponível no ambiente de execução para os testes com Testcontainers. No mesmo fluxo, `npm ci` e `npm run build` verificam o cliente. Um push na `main` publica esse build no bucket do site e invalida o CloudFront. Vitest e Playwright continuam locais.
 
+A instância gratuita da API adormece depois de um período sem chamadas. A primeira consulta nesse estado pode levar cerca de um minuto. O botão mostra um indicador assim que a chamada começa. Se a resposta ainda não chegou depois de três segundos, a tela avisa que a instância e o banco estão acordando. Uma resposta rápida não mostra esse aviso.
+
 ## Como executar
 
 ### Pré-requisitos
@@ -258,7 +260,6 @@ Não fazem parte desta entrega:
 - Importação de arquivos XLSX.
 - Versionamento da API em `/v2`.
 - Listagem de concessões. A API não oferece `GET /concessoes`.
-- Publicação do cliente.
 
 A API utiliza o parâmetro `pessoa` para identificar a consulta, mas ainda não autentica a identidade de quem realiza a requisição. Portanto, o projeto não deve ser considerado um sistema de controle de acesso pronto para produção.
 

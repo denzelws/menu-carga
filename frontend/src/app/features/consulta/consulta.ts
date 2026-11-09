@@ -1,5 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { AvisoAquecimento } from '../../core/aviso-aquecimento';
 import { ConcessoesService } from '../../core/concessoes.service';
 import { MAX_PESSOA } from '../../core/models';
 
@@ -7,7 +8,7 @@ type EstadoConsulta = 'inicial' | 'carregando' | 'permitido' | 'negado' | 'vazio
 
 @Component({
   selector: 'app-consulta',
-  imports: [FormsModule],
+  imports: [FormsModule, AvisoAquecimento],
   templateUrl: './consulta.html',
 })
 export class Consulta {
